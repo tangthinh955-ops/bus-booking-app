@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/trip_model.dart';
+import '../../booking/screens/seat_selection_screen.dart';
 
 // ════════════════════════════════════════════════════════════
 // Widget thẻ chuyến xe — Phong cách hãng xe riêng
@@ -20,7 +22,7 @@ class TripCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: trip.hasAvailableSeats
             ? () {
-                // TODO: Chuyển sang màn hình chọn ghế (Booking Screen)
+                Get.to(() => SeatSelectionScreen(trip: trip));
               }
             : null,
         child: Padding(

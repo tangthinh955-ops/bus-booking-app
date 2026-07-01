@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/data/mock_data.dart';
 import '../../../../core/models/trip_model.dart';
+import '../../../../services/trip_service.dart';
 import '../widgets/trip_card.dart';
 
 /// Tab "Trang chủ" theo phong cách app 1 hãng xe (Futa Bus, Phương Trang...)
@@ -21,14 +22,41 @@ class _HomeTabState extends State<HomeTab> {
   String? _selectedDeparture;
   String? _selectedDestination;
 
-  // Danh sách chuyến đang hiển thị (mặc định: toàn bộ)
-  List<TripModel> _displayedTrips = MockData.trips;
+  // Danh sách chuyến đang hiển thị
+  List<TripModel> _displayedTrips = [];
+  bool _isLoading = true;
+  bool _isSearching = false;
 
   // Danh sách thành phố cho dropdown
   final List<String> _cities = TripModel.popularCities;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadPopularTrips();
+  }
+
+  /// Lấy các chuyến phổ biến (Tất cả chuyến xe mặc định)
+  Future<void> _loadPopularTrips() async {
+    setState(() {
+      _isLoading = true;
+      _isSearching = false;
+    });
+
+    try {
+      final trips = await Get.find<TripService>().getAllTrips(); // Hoặc getPopularTrips()
+      setState(() {
+        _displayedTrips = trips;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      Get.snackbar('Lỗi', 'Không thể tải dữ liệu chuyến xe');
+    }
+  }
+
   /// Xử lý khi bấm nút "Tìm chuyến xe"
-  void _searchTrips() {
+  Future<void> _searchTrips() async {
     if (_selectedDeparture == null || _selectedDestination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -49,11 +77,24 @@ class _HomeTabState extends State<HomeTab> {
     }
 
     setState(() {
-      _displayedTrips = MockData.searchTrips(
+      _isLoading = true;
+      _isSearching = true;
+    });
+
+    try {
+      final trips = await Get.find<TripService>().searchTrips(
         departure: _selectedDeparture!,
         destination: _selectedDestination!,
       );
-    });
+      setState(() {
+        _displayedTrips = trips;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('LỖI TÌM KIẾM: $e');
+      setState(() => _isLoading = false);
+      Get.snackbar('Lỗi', 'Lỗi khi tìm kiếm: $e');
+    }
   }
 
   /// Hoán đổi điểm đi ↔ điểm đến (tính năng phổ biến trên app xe)
@@ -81,7 +122,7 @@ class _HomeTabState extends State<HomeTab> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _displayedTrips.length == MockData.trips.length
+                  !_isSearching
                       ? 'Tất cả chuyến xe'
                       : 'Kết quả tìm kiếm (${_displayedTrips.length})',
                   style: const TextStyle(
@@ -89,13 +130,13 @@ class _HomeTabState extends State<HomeTab> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (_displayedTrips.length != MockData.trips.length)
+                if (_isSearching)
                   TextButton(
-                    onPressed: () => setState(() {
-                      _displayedTrips = MockData.trips;
+                    onPressed: () {
                       _selectedDeparture = null;
                       _selectedDestination = null;
-                    }),
+                      _loadPopularTrips();
+                    },
                     child: const Text('Xem tất cả'),
                   ),
               ],
@@ -103,7 +144,12 @@ class _HomeTabState extends State<HomeTab> {
           ),
 
           // ── PHẦN 3: DANH SÁCH CHUYẾN XE ──
-          if (_displayedTrips.isEmpty)
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_displayedTrips.isEmpty)
             _buildEmptyState()
           else
             ListView.builder(
