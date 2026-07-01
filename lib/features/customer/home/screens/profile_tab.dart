@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../routes/app_pages.dart';
+
+import '../../../../services/auth_service.dart';
 
 /// Tab "Tài khoản" - thông tin và cài đặt tài khoản người dùng
 class ProfileTab extends StatelessWidget {
@@ -9,6 +10,10 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Get.find<AuthService>();
+    final user = authService.currentUser;
+    final userName = authService.userName.value.isNotEmpty ? authService.userName.value : 'Khách hàng';
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -22,20 +27,25 @@ class ProfileTab extends StatelessWidget {
                 CircleAvatar(
                   radius: 44,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  child: const Icon(Icons.person, size: 50, color: Colors.white),
+                  child: const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Nguyễn Văn A',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'nguyenvana@gmail.com',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  user?.email ?? '',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
@@ -74,7 +84,7 @@ class ProfileTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
           // --- NÚT ĐĂNG XUẤT ---
           Padding(
@@ -83,7 +93,7 @@ class ProfileTab extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  Get.offAllNamed(AppRoutes.login);
+                  authService.logout();
                 },
                 icon: const Icon(Icons.logout, color: AppColors.error),
                 label: const Text(
@@ -94,7 +104,8 @@ class ProfileTab extends StatelessWidget {
                   side: const BorderSide(color: AppColors.error),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -132,9 +143,7 @@ class ProfileTab extends StatelessWidget {
           shadowColor: Colors.black.withValues(alpha: 0.08),
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Column(
@@ -145,8 +154,10 @@ class ProfileTab extends StatelessWidget {
                       ListTile(
                         leading: Icon(item.icon, color: AppColors.primary),
                         title: Text(item.label),
-                        trailing: const Icon(Icons.chevron_right,
-                            color: AppColors.textSecondary),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.textSecondary,
+                        ),
                         onTap: item.onTap,
                       ),
                       if (!isLast)
@@ -169,6 +180,9 @@ class _MenuItem {
   final String label;
   final VoidCallback onTap;
 
-  const _MenuItem(
-      {required this.icon, required this.label, required this.onTap});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 }

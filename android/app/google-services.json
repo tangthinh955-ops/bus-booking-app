@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "185027478359",
+    "project_id": "mobile-app-bus-58140",
+    "storage_bucket": "mobile-app-bus-58140.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185027478359:android:536f2408cbc5292e413412",
+        "android_client_info": {
+          "package_name": "com.example.app_bus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnM4tkXWOj0SOKS4CorTy05sgXalPVqtM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
