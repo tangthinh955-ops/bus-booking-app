@@ -1,5 +1,8 @@
 import '../models/trip_model.dart';
+<<<<<<< HEAD
 import '../models/booking_model.dart';
+=======
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 
 /// Dữ liệu giả (Mock Data) — Tất cả chuyến đều thuộc hãng "An Phát Bus".
 /// Tập trung vào các TUYẾN ĐƯỜNG khác nhau của hãng.
@@ -125,6 +128,7 @@ class MockData {
       t.departure == departure && t.destination == destination
     ).toList();
   }
+<<<<<<< HEAD
 
   // ═══════════════════════════════════════════════════════════
   // DỮ LIỆU ĐẶT VÉ (dùng cho phần Quản trị viên)
@@ -210,3 +214,6 @@ class MockData {
         .fold(0, (sum, b) => sum + b.seatCount);
   }
 }
+=======
+}
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe

@@ -2,6 +2,10 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+<<<<<<< HEAD
+=======
+    id("com.google.gms.google-services")
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 }
 
 android {

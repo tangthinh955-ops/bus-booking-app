@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/data/mock_data.dart';
 import '../../../../core/models/trip_model.dart';
+=======
+import 'package:get/get.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/models/trip_model.dart';
+import '../../../../services/trip_service.dart';
+import '../widgets/trip_card.dart';
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 
 /// Tab "Trang chủ" theo phong cách app 1 hãng xe (Futa Bus, Phương Trang...)
 /// Gồm 2 phần:
@@ -20,14 +29,51 @@ class _HomeTabState extends State<HomeTab> {
   String? _selectedDeparture;
   String? _selectedDestination;
 
+<<<<<<< HEAD
   // Danh sách chuyến đang hiển thị (mặc định: toàn bộ)
   List<TripModel> _displayedTrips = MockData.trips;
+=======
+  // Danh sách chuyến đang hiển thị
+  List<TripModel> _displayedTrips = [];
+  bool _isLoading = true;
+  bool _isSearching = false;
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 
   // Danh sách thành phố cho dropdown
   final List<String> _cities = TripModel.popularCities;
 
+<<<<<<< HEAD
   /// Xử lý khi bấm nút "Tìm chuyến xe"
   void _searchTrips() {
+=======
+  @override
+  void initState() {
+    super.initState();
+    _loadPopularTrips();
+  }
+
+  /// Lấy các chuyến phổ biến (Tất cả chuyến xe mặc định)
+  Future<void> _loadPopularTrips() async {
+    setState(() {
+      _isLoading = true;
+      _isSearching = false;
+    });
+
+    try {
+      final trips = await Get.find<TripService>().getAllTrips(); // Hoặc getPopularTrips()
+      setState(() {
+        _displayedTrips = trips;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      Get.snackbar('Lỗi', 'Không thể tải dữ liệu chuyến xe');
+    }
+  }
+
+  /// Xử lý khi bấm nút "Tìm chuyến xe"
+  Future<void> _searchTrips() async {
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
     if (_selectedDeparture == null || _selectedDestination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -48,11 +94,32 @@ class _HomeTabState extends State<HomeTab> {
     }
 
     setState(() {
+<<<<<<< HEAD
       _displayedTrips = MockData.searchTrips(
         departure: _selectedDeparture!,
         destination: _selectedDestination!,
       );
     });
+=======
+      _isLoading = true;
+      _isSearching = true;
+    });
+
+    try {
+      final trips = await Get.find<TripService>().searchTrips(
+        departure: _selectedDeparture!,
+        destination: _selectedDestination!,
+      );
+      setState(() {
+        _displayedTrips = trips;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('LỖI TÌM KIẾM: $e');
+      setState(() => _isLoading = false);
+      Get.snackbar('Lỗi', 'Lỗi khi tìm kiếm: $e');
+    }
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
   }
 
   /// Hoán đổi điểm đi ↔ điểm đến (tính năng phổ biến trên app xe)
@@ -80,6 +147,7 @@ class _HomeTabState extends State<HomeTab> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
+<<<<<<< HEAD
                   _displayedTrips.length == MockData.trips.length
                       ? 'Tất cả chuyến xe'
                       : 'Kết quả tìm kiếm (${_displayedTrips.length})',
@@ -93,6 +161,23 @@ class _HomeTabState extends State<HomeTab> {
                       _selectedDeparture = null;
                       _selectedDestination = null;
                     }),
+=======
+                  !_isSearching
+                      ? 'Tất cả chuyến xe'
+                      : 'Kết quả tìm kiếm (${_displayedTrips.length})',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (_isSearching)
+                  TextButton(
+                    onPressed: () {
+                      _selectedDeparture = null;
+                      _selectedDestination = null;
+                      _loadPopularTrips();
+                    },
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                     child: const Text('Xem tất cả'),
                   ),
               ],
@@ -100,7 +185,16 @@ class _HomeTabState extends State<HomeTab> {
           ),
 
           // ── PHẦN 3: DANH SÁCH CHUYẾN XE ──
+<<<<<<< HEAD
           if (_displayedTrips.isEmpty)
+=======
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_displayedTrips.isEmpty)
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
             _buildEmptyState()
           else
             ListView.builder(
@@ -109,7 +203,11 @@ class _HomeTabState extends State<HomeTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               itemCount: _displayedTrips.length,
               itemBuilder: (context, index) =>
+<<<<<<< HEAD
                   _TripCard(trip: _displayedTrips[index]),
+=======
+                  TripCard(trip: _displayedTrips[index]),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
             ),
         ],
       ),
@@ -136,8 +234,16 @@ class _HomeTabState extends State<HomeTab> {
               children: [
                 Row(
                   children: [
+<<<<<<< HEAD
                     const Icon(Icons.directions_bus,
                         color: Colors.white, size: 28),
+=======
+                    const Icon(
+                      Icons.directions_bus,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                     const SizedBox(width: 8),
                     Text(
                       AppStrings.companyName,
@@ -201,8 +307,16 @@ class _HomeTabState extends State<HomeTab> {
                           color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
+<<<<<<< HEAD
                         child: const Icon(Icons.swap_horiz,
                             color: AppColors.primary, size: 20),
+=======
+                        child: const Icon(
+                          Icons.swap_horiz,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                       ),
                     ),
 
@@ -227,22 +341,48 @@ class _HomeTabState extends State<HomeTab> {
                 // ── HÀNG 2: Ngày đi (hiển thị ngày hôm nay) ──
                 Row(
                   children: [
+<<<<<<< HEAD
                     const Icon(Icons.calendar_today,
                         size: 18, color: AppColors.textSecondary),
+=======
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                     const SizedBox(width: 8),
                     Text(
                       _getTodayString(),
                       style: const TextStyle(
+<<<<<<< HEAD
                           fontSize: 14, color: AppColors.textPrimary),
+=======
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                     ),
                     const Spacer(),
                     const Text(
                       '1 hành khách',
                       style: TextStyle(
+<<<<<<< HEAD
                           fontSize: 14, color: AppColors.textSecondary),
                     ),
                     const Icon(Icons.person_outline,
                         size: 18, color: AppColors.textSecondary),
+=======
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.person_outline,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                   ],
                 ),
 
@@ -261,7 +401,12 @@ class _HomeTabState extends State<HomeTab> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
+<<<<<<< HEAD
                           borderRadius: BorderRadius.circular(10)),
+=======
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                     ),
                   ),
                 ),
@@ -288,21 +433,39 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             Icon(icon, size: 14, color: iconColor),
             const SizedBox(width: 4),
+<<<<<<< HEAD
             Text(label,
                 style: const TextStyle(
                     fontSize: 11, color: AppColors.textSecondary)),
+=======
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
           ],
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           initialValue: value,
+<<<<<<< HEAD
           hint: Text(label, style: const TextStyle(fontSize: 13)),
+=======
+          hint: Text(
+            "Chọn ${label.toLowerCase()}",
+            style: const TextStyle(fontSize: 13),
+          ),
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
           decoration: const InputDecoration(
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             border: OutlineInputBorder(),
             isDense: true,
           ),
           style: const TextStyle(
+<<<<<<< HEAD
               fontSize: 13,
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600),
@@ -313,6 +476,23 @@ class _HomeTabState extends State<HomeTab> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 13)),
                   ))
+=======
+            fontSize: 13,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+          items: _cities
+              .map(
+                (city) => DropdownMenuItem(
+                  value: city,
+                  child: Text(
+                    city,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              )
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
               .toList(),
           onChanged: onChanged,
         ),
@@ -344,13 +524,24 @@ class _HomeTabState extends State<HomeTab> {
   String _getTodayString() {
     final now = DateTime.now();
     const days = [
+<<<<<<< HEAD
       'Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4',
       'Thứ 5', 'Thứ 6', 'Thứ 7'
+=======
+      'Chủ nhật',
+      'Thứ 2',
+      'Thứ 3',
+      'Thứ 4',
+      'Thứ 5',
+      'Thứ 6',
+      'Thứ 7',
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
     ];
     return '${days[now.weekday % 7]}, ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
   }
 }
 
+<<<<<<< HEAD
 // ════════════════════════════════════════════════════════════
 // Widget thẻ chuyến xe — Phong cách hãng xe riêng
 // ════════════════════════════════════════════════════════════
@@ -546,3 +737,5 @@ class _TripCard extends StatelessWidget {
         );
   }
 }
+=======
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe

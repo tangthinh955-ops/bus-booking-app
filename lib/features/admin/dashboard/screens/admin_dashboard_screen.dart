@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:app_bus/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,3 +81,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 }
+=======
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../../routes/app_pages.dart';
+
+class AdminDashboardScreen extends StatelessWidget {
+  const AdminDashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bảng điều khiển Admin'),
+        backgroundColor: Colors.redAccent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => Get.offAllNamed(AppRoutes.login),
+          )
+        ],
+      ),
+      body: const Center(
+        child: Text('Quản lý các tuyến xe, chuyến xe'),
+      ),
+    );
+  }
+}
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe

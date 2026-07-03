@@ -15,6 +15,10 @@ class TripModel {
   final int totalSeats;       // Tổng số ghế
   final int availableSeats;   // Số ghế còn trống
   final List<String> amenities; // Tiện ích (VD: ["WiFi", "Điều hoà", "Nước uống"])
+<<<<<<< HEAD
+=======
+  final List<String> bookedSeatsList; // Danh sách mã ghế đã đặt (Mới thêm)
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 
   const TripModel({
     required this.id,
@@ -29,6 +33,10 @@ class TripModel {
     required this.totalSeats,
     required this.availableSeats,
     required this.amenities,
+<<<<<<< HEAD
+=======
+    this.bookedSeatsList = const [],
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
   });
 
   /// Còn chỗ hay không
@@ -40,6 +48,7 @@ class TripModel {
   /// Số ghế đã được đặt
   int get bookedSeats => totalSeats - availableSeats;
 
+<<<<<<< HEAD
   /// Danh sách các điểm đi duy nhất (dùng cho dropdown tìm kiếm)
   static List<String> get popularCities => [
         'TP. Hồ Chí Minh',
@@ -50,5 +59,56 @@ class TripModel {
         'Đà Nẵng',
         'Hội An',
         'Huế',
+=======
+  /// Tạo TripModel từ dữ liệu Firestore (Map → Object)
+  factory TripModel.fromFirestore(Map<String, dynamic> data, String docId) {
+    return TripModel(
+      id: docId,
+      busNumber: data['busNumber'] ?? '',
+      busType: data['busType'] ?? '',
+      departure: data['departure'] ?? '',
+      destination: data['destination'] ?? '',
+      departureTime: data['departureTime'] ?? '',
+      arrivalTime: data['arrivalTime'] ?? '',
+      duration: data['duration'] ?? '',
+      price: (data['price'] ?? 0).toDouble(),
+      totalSeats: data['totalSeats'] ?? 0,
+      availableSeats: data['availableSeats'] ?? 0,
+      amenities: List<String>.from(data['amenities'] ?? []),
+      bookedSeatsList: List<String>.from(data['bookedSeatsList'] ?? []),
+    );
+  }
+
+  /// Chuyển TripModel sang Map để lưu lên Firestore (Object → Map)
+  Map<String, dynamic> toFirestore() {
+    return {
+      'busNumber': busNumber,
+      'busType': busType,
+      'departure': departure,
+      'destination': destination,
+      'departureTime': departureTime,
+      'arrivalTime': arrivalTime,
+      'duration': duration,
+      'price': price,
+      'totalSeats': totalSeats,
+      'availableSeats': availableSeats,
+      'amenities': amenities,
+      'bookedSeatsList': bookedSeatsList,
+    };
+  }
+
+  /// Danh sách thành phố hãng Thịnh Phát Bus phục vụ
+  static List<String> get popularCities => [
+        'TP. Hồ Chí Minh',
+        'Vũng Tàu',
+        'Phan Thiết',
+        'Đà Lạt',
+        'Nha Trang',
+        'Quy Nhơn',
+        'Đà Nẵng',
+        'Cần Thơ',
+        'Vĩnh Long',
+        'Cà Mau',
+>>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
       ];
 }
