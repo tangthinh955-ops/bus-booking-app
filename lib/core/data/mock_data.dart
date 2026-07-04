@@ -1,4 +1,5 @@
 import '../models/trip_model.dart';
+import '../models/booking_model.dart';
 
 /// Dữ liệu giả (Mock Data) — Tất cả chuyến đều thuộc hãng "An Phát Bus".
 /// Tập trung vào các TUYẾN ĐƯỜNG khác nhau của hãng.
@@ -124,4 +125,89 @@ class MockData {
       t.departure == departure && t.destination == destination
     ).toList();
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // DỮ LIỆU ĐẶT VÉ (dùng cho phần Quản trị viên)
+  // ═══════════════════════════════════════════════════════════
+  static final List<BookingModel> bookings = [
+    BookingModel(
+      id: 'BK240701001',
+      customerName: 'Nguyễn Văn A',
+      phone: '0901 234 567',
+      tripId: 'trip_001',
+      route: 'TP. Hồ Chí Minh → Đà Lạt',
+      departureTime: '07:00 - 02/07/2026',
+      bookingDate: '01/07/2026',
+      seatCount: 2,
+      totalPrice: 560000,
+      status: BookingStatus.pending,
+    ),
+    BookingModel(
+      id: 'BK240701002',
+      customerName: 'Trần Thị B',
+      phone: '0912 345 678',
+      tripId: 'trip_003',
+      route: 'TP. Hồ Chí Minh → Nha Trang',
+      departureTime: '08:00 - 03/07/2026',
+      bookingDate: '01/07/2026',
+      seatCount: 1,
+      totalPrice: 320000,
+      status: BookingStatus.confirmed,
+    ),
+    BookingModel(
+      id: 'BK240630003',
+      customerName: 'Lê Văn C',
+      phone: '0987 654 321',
+      tripId: 'trip_005',
+      route: 'TP. Hồ Chí Minh → Phan Thiết',
+      departureTime: '06:30 - 01/07/2026',
+      bookingDate: '30/06/2026',
+      seatCount: 3,
+      totalPrice: 450000,
+      status: BookingStatus.completed,
+    ),
+    BookingModel(
+      id: 'BK240629004',
+      customerName: 'Phạm Thị D',
+      phone: '0933 222 111',
+      tripId: 'trip_002',
+      route: 'TP. Hồ Chí Minh → Đà Lạt',
+      departureTime: '22:00 - 29/06/2026',
+      bookingDate: '28/06/2026',
+      seatCount: 1,
+      totalPrice: 200000,
+      status: BookingStatus.cancelled,
+    ),
+    BookingModel(
+      id: 'BK240701005',
+      customerName: 'Hoàng Văn E',
+      phone: '0977 888 999',
+      tripId: 'trip_006',
+      route: 'TP. Hồ Chí Minh → Cần Thơ',
+      departureTime: '09:00 - 04/07/2026',
+      bookingDate: '01/07/2026',
+      seatCount: 4,
+      totalPrice: 480000,
+      status: BookingStatus.pending,
+    ),
+  ];
+
+  /// Tổng doanh thu từ các đơn đã xác nhận / hoàn thành
+  static double get totalRevenue {
+    return bookings
+        .where((b) =>
+            b.status == BookingStatus.confirmed ||
+            b.status == BookingStatus.completed)
+        .fold(0.0, (sum, b) => sum + b.totalPrice);
+  }
+
+  /// Tổng số vé (ghế) đã bán từ các đơn đã xác nhận / hoàn thành
+  static int get totalSeatsSold {
+    return bookings
+        .where((b) =>
+            b.status == BookingStatus.confirmed ||
+            b.status == BookingStatus.completed)
+        .fold(0, (sum, b) => sum + b.seatCount);
+  }
 }
+

@@ -8,4 +8,6 @@ class AppColors {
   static const Color textSecondary = Color(0xFF757575); // Grey
   static const Color success = Color(0xFF4CAF50); // Green
   static const Color error = Color(0xFFF44336); // Red
+  static const Color adminPrimary = Color.fromARGB(255, 232, 44, 30);  // 
+  static const Color adminPrimaryDark = Color.fromARGB(255, 255, 51, 37); 
 }

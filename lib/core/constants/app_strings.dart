@@ -15,6 +15,10 @@ class AppStrings {
 
   // Admin
   static const String adminDashboard = 'Bảng điều khiển Admin';
+  static const String adminOverview = 'Tổng quan';
+  static const String adminTrips = 'Chuyến xe';
+  static const String adminBookings = 'Đặt vé';
+  static const String adminAccount = 'Tài khoản';
 
   // Customer
   static const String searchTrip = 'Tìm chuyến xe';
