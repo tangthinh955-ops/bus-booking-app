@@ -15,10 +15,7 @@ class TripModel {
   final int totalSeats;       // Tổng số ghế
   final int availableSeats;   // Số ghế còn trống
   final List<String> amenities; // Tiện ích (VD: ["WiFi", "Điều hoà", "Nước uống"])
-<<<<<<< HEAD
-=======
   final List<String> bookedSeatsList; // Danh sách mã ghế đã đặt (Mới thêm)
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 
   const TripModel({
     required this.id,
@@ -33,10 +30,7 @@ class TripModel {
     required this.totalSeats,
     required this.availableSeats,
     required this.amenities,
-<<<<<<< HEAD
-=======
     this.bookedSeatsList = const [],
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
   });
 
   /// Còn chỗ hay không
@@ -48,18 +42,6 @@ class TripModel {
   /// Số ghế đã được đặt
   int get bookedSeats => totalSeats - availableSeats;
 
-<<<<<<< HEAD
-  /// Danh sách các điểm đi duy nhất (dùng cho dropdown tìm kiếm)
-  static List<String> get popularCities => [
-        'TP. Hồ Chí Minh',
-        'Đà Lạt',
-        'Nha Trang',
-        'Phan Thiết',
-        'Cần Thơ',
-        'Đà Nẵng',
-        'Hội An',
-        'Huế',
-=======
   /// Tạo TripModel từ dữ liệu Firestore (Map → Object)
   factory TripModel.fromFirestore(Map<String, dynamic> data, String docId) {
     return TripModel(
@@ -109,6 +91,5 @@ class TripModel {
         'Cần Thơ',
         'Vĩnh Long',
         'Cà Mau',
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
       ];
 }

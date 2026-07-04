@@ -1,43 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import '../../../../core/constants/app_colors.dart';
-
-/// Tab "Lịch sử" - hiển thị các vé đã đặt của người dùng
-class HistoryTab extends StatelessWidget {
-  const HistoryTab({super.key});
-
-  // Dữ liệu giả cho lịch sử vé (tất cả đều của hãng Thịnh Phát Bus)
-  static const List<Map<String, String>> _history = [
-    {
-      'busNumber': 'TP-L01',         // Số hiệu xe Thịnh Phát
-      'route': 'HCM → Đà Lạt',
-      'date': '20/06/2026 - 07:00',
-      'price': '280.000đ',
-      'status': 'Hoàn thành',
-      'ticketCode': 'TP240620001',
-    },
-    {
-      'busNumber': 'TP-G02',
-      'route': 'HCM → Nha Trang',
-      'date': '15/06/2026 - 08:00',
-      'price': '320.000đ',
-      'status': 'Hoàn thành',
-      'ticketCode': 'TP240615002',
-    },
-    {
-      'busNumber': 'TP-G03',
-      'route': 'HCM → Phan Thiết',
-      'date': '10/06/2026 - 06:30',
-      'price': '150.000đ',
-      'status': 'Đã hủy',
-      'ticketCode': 'TP240610003',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    if (_history.isEmpty) {
-=======
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/ticket_model.dart';
@@ -88,7 +49,6 @@ class _HistoryTabState extends State<HistoryTab> {
     }
 
     if (_tickets.isEmpty) {
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -106,17 +66,6 @@ class _HistoryTabState extends State<HistoryTab> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-<<<<<<< HEAD
-      itemCount: _history.length,
-      itemBuilder: (context, index) {
-        final item = _history[index];
-        final bool isCompleted = item['status'] == 'Hoàn thành';
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-=======
       itemCount: _tickets.length,
       itemBuilder: (context, index) {
         final ticket = _tickets[index];
@@ -131,7 +80,6 @@ class _HistoryTabState extends State<HistoryTab> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -148,14 +96,6 @@ class _HistoryTabState extends State<HistoryTab> {
                         const Text(
                           'Thịnh Phát Bus',
                           style: TextStyle(
-<<<<<<< HEAD
-                              fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                        Text(
-                          'Xe số: ${item['busNumber']}',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary),
-=======
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
@@ -166,19 +106,14 @@ class _HistoryTabState extends State<HistoryTab> {
                             fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                         ),
                       ],
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-<<<<<<< HEAD
-                          horizontal: 10, vertical: 3),
-=======
                         horizontal: 10,
                         vertical: 3,
                       ),
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                       decoration: BoxDecoration(
                         color: isCompleted
                             ? AppColors.success.withValues(alpha: 0.1)
@@ -186,18 +121,11 @@ class _HistoryTabState extends State<HistoryTab> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-<<<<<<< HEAD
-                        item['status']!,
-                        style: TextStyle(
-                          color:
-                              isCompleted ? AppColors.success : AppColors.error,
-=======
                         displayStatus,
                         style: TextStyle(
                           color: isCompleted
                               ? AppColors.success
                               : AppColors.error,
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -209,14 +137,6 @@ class _HistoryTabState extends State<HistoryTab> {
                 // --- Tuyến đường ---
                 Row(
                   children: [
-<<<<<<< HEAD
-                    const Icon(Icons.route,
-                        size: 16, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    Text(item['route']!,
-                        style:
-                            const TextStyle(color: AppColors.textSecondary)),
-=======
                     const Icon(
                       Icons.route,
                       size: 16,
@@ -227,21 +147,12 @@ class _HistoryTabState extends State<HistoryTab> {
                       '${ticket.departure} → ${ticket.destination}',
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                   ],
                 ),
                 const SizedBox(height: 4),
                 // --- Ngày giờ ---
                 Row(
                   children: [
-<<<<<<< HEAD
-                    const Icon(Icons.access_time,
-                        size: 16, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    Text(item['date']!,
-                        style:
-                            const TextStyle(color: AppColors.textSecondary)),
-=======
                     const Icon(
                       Icons.access_time,
                       size: 16,
@@ -252,7 +163,6 @@ class _HistoryTabState extends State<HistoryTab> {
                       'Giờ chạy: ${ticket.departureTime} (Mua lúc: $formattedDate)',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                   ],
                 ),
                 const Divider(height: 16),
@@ -261,14 +171,6 @@ class _HistoryTabState extends State<HistoryTab> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-<<<<<<< HEAD
-                      'Mã vé: ${item['ticketCode']}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                    Text(
-                      item['price']!,
-=======
                       'Ghế: ${ticket.seats.join(', ')}',
                       style: const TextStyle(
                         fontSize: 13,
@@ -277,7 +179,6 @@ class _HistoryTabState extends State<HistoryTab> {
                     ),
                     Text(
                       formattedPrice,
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,

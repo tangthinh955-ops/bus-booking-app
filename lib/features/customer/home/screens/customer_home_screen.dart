@@ -6,11 +6,8 @@ import 'history_tab.dart';
 import 'profile_tab.dart';
 
 /// Màn hình chính của Khách hàng.
-<<<<<<< HEAD
 /// 
-=======
 ///
->>>>>>> 92683eb5c80672e2aef152ee0d91869305ad7dbe
 /// Đây là "vỏ bọc" chứa 4 tab bên trong.
 /// Khi bấm vào icon ở thanh điều hướng dưới, nó chỉ
 /// thay đổi nội dung hiển thị, KHÔNG navigate sang trang mới.
