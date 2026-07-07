@@ -32,8 +32,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Đăng ký tài khoản',
-            style: TextStyle(color: Colors.black87)),
+        title: const Text(
+          'Đăng ký tài khoản',
+          style: TextStyle(color: Colors.black87),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -70,7 +72,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Họ và tên',
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Vui lòng nhập tên' : null,
@@ -85,10 +88,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Số điện thoại',
                     prefixIcon: const Icon(Icons.phone_outlined),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Vui lòng nhập số điện thoại' : null,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập số điện thoại';
+                    }
+                    // SĐT Việt Nam: bắt đầu bằng 0, đúng 10 chữ số
+                    final phoneRegex = RegExp(r'^0\d{9}$');
+                    if (!phoneRegex.hasMatch(value.trim())) {
+                      return 'Số điện thoại không hợp lệ (VD: 0912345678)';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -100,7 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Email',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) return 'Vui lòng nhập email';
@@ -119,7 +133,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     hintText: 'Ít nhất 6 ký tự',
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) return 'Vui lòng nhập mật khẩu';
@@ -130,38 +145,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 // Nút Tạo tài khoản
-                Obx(() => ElevatedButton(
-                      onPressed: _authController.isLoading.value
-                          ? null
-                          : () {
-                              if (_formKey.currentState!.validate()) {
-                                _authController.register(
-                                  _nameController.text.trim(),
-                                  _phoneController.text.trim(),
-                                  _emailController.text.trim(),
-                                  _passwordController.text.trim(),
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                Obx(
+                  () => ElevatedButton(
+                    onPressed: _authController.isLoading.value
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              _authController.register(
+                                _nameController.text.trim(),
+                                _phoneController.text.trim(),
+                                _emailController.text.trim(),
+                                _passwordController.text.trim(),
+                              );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: _authController.isLoading.value
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Tạo tài khoản',
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                    child: _authController.isLoading.value
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
                             ),
-                    )),
+                          )
+                        : const Text(
+                            'Tạo tài khoản',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                  ),
+                ),
 
                 const SizedBox(height: 16),
                 TextButton(

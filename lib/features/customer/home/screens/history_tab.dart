@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/ticket_model.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/ticket_service.dart';
-import 'package:intl/intl.dart';
+import '../../booking/screens/ticket_detail_screen.dart';
 
 /// Tab "Lịch sử" - hiển thị các vé đã đặt của người dùng
 class HistoryTab extends StatefulWidget {
@@ -69,125 +70,138 @@ class _HistoryTabState extends State<HistoryTab> {
       itemCount: _tickets.length,
       itemBuilder: (context, index) {
         final ticket = _tickets[index];
-        final bool isCompleted = ticket.status == 'completed' || ticket.status == 'booked';
-        final displayStatus = ticket.status == 'booked' ? 'Đã đặt' : (ticket.status == 'completed' ? 'Hoàn thành' : 'Đã hủy');
+        final bool isCompleted =
+            ticket.status == 'completed' || ticket.status == 'booked';
+        final displayStatus = ticket.status == 'booked'
+            ? 'Đã đặt'
+            : (ticket.status == 'completed' ? 'Hoàn thành' : 'Đã hủy');
 
-        final formattedDate = DateFormat('dd/MM/yyyy - HH:mm').format(ticket.bookingDate);
-        final formattedPrice = '${ticket.totalPrice.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
+        final formattedDate = DateFormat(
+          'dd/MM/yyyy - HH:mm',
+        ).format(ticket.bookingDate);
+        final formattedPrice =
+            '${ticket.totalPrice.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- Header thẻ: tên nhà xe + trạng thái ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Số hiệu xe + tên hãng
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Thịnh Phát Bus',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+          clipBehavior: Clip.antiAlias, // Để InkWell ripple không tràn ra ngoài
+          child: InkWell(
+            onTap: () => Get.to(() => TicketDetailScreen(ticket: ticket)),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- Header thẻ: tên nhà xe + trạng thái ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Số hiệu xe + tên hãng
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Thịnh Phát Bus',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Xe số: ${ticket.busNumber}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                          Text(
+                            'Xe số: ${ticket.busNumber}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
                         ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? AppColors.success.withValues(alpha: 0.1)
-                            : AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        displayStatus,
-                        style: TextStyle(
+                        decoration: BoxDecoration(
                           color: isCompleted
-                              ? AppColors.success
-                              : AppColors.error,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          displayStatus,
+                          style: TextStyle(
+                            color: isCompleted
+                                ? AppColors.success
+                                : AppColors.error,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // --- Tuyến đường ---
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.route,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${ticket.departure} → ${ticket.destination}',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                // --- Ngày giờ ---
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Giờ chạy: ${ticket.departureTime} (Mua lúc: $formattedDate)',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const Divider(height: 16),
-                // --- Footer: mã vé + giá ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Ghế: ${ticket.seats.join(', ')}',
-                      style: const TextStyle(
-                        fontSize: 13,
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // --- Tuyến đường ---
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.route,
+                        size: 16,
                         color: AppColors.textSecondary,
                       ),
-                    ),
-                    Text(
-                      formattedPrice,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      const SizedBox(width: 6),
+                      Text(
+                        '${ticket.departure} → ${ticket.destination}',
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // --- Ngày giờ ---
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Giờ chạy: ${ticket.departureTime} (Mua lúc: $formattedDate)',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 16),
+                  // --- Footer: mã vé + giá ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Ghế: ${ticket.seats.join(', ')}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        formattedPrice,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

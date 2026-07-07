@@ -73,18 +73,54 @@ class AuthService extends GetxService {
     }
   }
 
-  // Đăng nhập (Login)
-  Future<String?> loginWithEmail(String email, String password) async {
+  // Đăng nhập bằng Email HOẶC Số điện thoại
+  Future<String?> loginWithEmailOrPhone(String identifier, String password) async {
+    String emailToLogin = identifier.trim();
+
+    // Kiểm tra nếu người dùng nhập số điện thoại (chỉ có chữ số, độ dài 10)
+    final isPhone = RegExp(r'^\d{10,11}$').hasMatch(identifier.trim());
+    if (isPhone) {
+      // Tra Firestore để tìm email tương ứng với số điện thoại này
+      try {
+        final query = await _firestore
+            .collection('users')
+            .where('phone', isEqualTo: identifier.trim())
+            .limit(1)
+            .get();
+
+        if (query.docs.isEmpty) {
+          return 'Không tìm thấy tài khoản với số điện thoại này.';
+        }
+        emailToLogin = query.docs.first.data()['email'] ?? '';
+      } catch (e) {
+        return 'Lỗi kết nối mạng. Vui lòng thử lại.';
+      }
+    }
+
+    // Đăng nhập bằng email (dù người dùng nhập SĐT hay email)
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _auth.signInWithEmailAndPassword(
+          email: emailToLogin, password: password);
       return null; // Thành công
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        return 'Không tìm thấy tài khoản với email này.';
-      } else if (e.code == 'wrong-password') {
-        return 'Mật khẩu không chính xác.';
+      print('FirebaseAuth Error Code: ${e.code}');
+      switch (e.code) {
+        case 'user-not-found':
+          return 'Không tìm thấy tài khoản.';
+        case 'wrong-password':
+        case 'invalid-credential':
+          return 'Thông tin đăng nhập không đúng.';
+        case 'invalid-email':
+          return 'Địa chỉ email không hợp lệ.';
+        case 'user-disabled':
+          return 'Tài khoản này đã bị vô hiệu hoá.';
+        case 'too-many-requests':
+          return 'Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.';
+        case 'network-request-failed':
+          return 'Lỗi kết nối mạng. Vui lòng kiểm tra lại.';
+        default:
+          return 'Lỗi đăng nhập (${e.code}).';
       }
-      return 'Email hoặc mật khẩu không đúng.';
     } catch (e) {
       return 'Có lỗi xảy ra: $e';
     }
@@ -93,6 +129,28 @@ class AuthService extends GetxService {
   // Đăng xuất (Logout)
   Future<void> logout() async {
     await _auth.signOut();
+  }
+
+  // Quên mật khẩu — Firebase tự gửi email đặt lại mật khẩu
+  Future<String?> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null; // Thành công
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+        case 'invalid-credential':
+          return 'Không tìm thấy tài khoản với email này.';
+        case 'invalid-email':
+          return 'Địa chỉ email không hợp lệ.';
+        case 'network-request-failed':
+          return 'Lỗi kết nối mạng. Vui lòng kiểm tra lại.';
+        default:
+          return 'Có lỗi xảy ra (${e.code}).';
+      }
+    } catch (e) {
+      return 'Có lỗi xảy ra: $e';
+    }
   }
 
   // Lấy role (vai trò) của user hiện tại từ Firestore

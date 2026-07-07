@@ -19,8 +19,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   // Tạo danh sách mã ghế ảo dựa trên tổng số ghế
   List<String> _generateSeatList() {
     List<String> seats = [];
-    final prefix = ['A', 'B', 'C', 'D', 'E'];
-    
+    final prefix = ['A', 'B'];
+
     // Đơn giản hóa: Cứ rải từ A1, A2... B1, B2...
     int count = 1;
     for (int i = 1; i <= widget.trip.totalSeats; i++) {
@@ -34,7 +34,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
 
   void _toggleSeat(String seatId) {
     if (widget.trip.bookedSeatsList.contains(seatId)) return; // Ghế đã đặt
-    
+
     setState(() {
       if (_selectedSeats.contains(seatId)) {
         _selectedSeats.remove(seatId);
@@ -73,16 +73,16 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Sơ đồ ghế
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(24),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, // 4 ghế 1 hàng
-                childAspectRatio: 1,
+                crossAxisCount: 3, // 3 ghế 1 hàng
+                childAspectRatio: 0.7,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
@@ -96,14 +96,16 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                   onTap: () => _toggleSeat(seatId),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isBooked 
-                          ? Colors.grey.shade300 
+                      color: isBooked
+                          ? Colors.grey.shade300
                           : (isSelected ? AppColors.primary : Colors.white),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isBooked 
-                            ? Colors.grey.shade400 
-                            : (isSelected ? AppColors.primary : Colors.grey.shade300),
+                        color: isBooked
+                            ? Colors.grey.shade400
+                            : (isSelected
+                                  ? AppColors.primary
+                                  : Colors.grey.shade300),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -111,9 +113,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                       seatId,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isBooked 
-                            ? Colors.grey.shade600 
-                            : (isSelected ? Colors.white : AppColors.textPrimary),
+                        color: isBooked
+                            ? Colors.grey.shade600
+                            : (isSelected
+                                  ? Colors.white
+                                  : AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -132,7 +136,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -2),
-            )
+            ),
           ],
         ),
         child: SafeArea(
@@ -150,27 +154,37 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                     Text(
                       '${totalPrice.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ',
                       style: const TextStyle(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold, 
-                        color: AppColors.primary
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
               ),
               ElevatedButton(
-                onPressed: _selectedSeats.isEmpty ? null : () {
-                  Get.to(() => BookingConfirmationScreen(
-                    trip: widget.trip, 
-                    selectedSeats: _selectedSeats, 
-                    totalPrice: totalPrice,
-                  ));
-                },
+                onPressed: _selectedSeats.isEmpty
+                    ? null
+                    : () {
+                        Get.to(
+                          () => BookingConfirmationScreen(
+                            trip: widget.trip,
+                            selectedSeats: _selectedSeats,
+                            totalPrice: totalPrice,
+                          ),
+                        );
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
                 ),
-                child: const Text('Tiếp tục', style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: const Text(
+                  'Tiếp tục',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
             ],
           ),

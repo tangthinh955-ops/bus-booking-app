@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../routes/app_pages.dart';
 
 import '../../../../services/auth_service.dart';
 
@@ -92,8 +93,9 @@ class ProfileTab extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  authService.logout();
+                onPressed: () async {
+                  await authService.logout();
+                  Get.offAllNamed(AppRoutes.login);
                 },
                 icon: const Icon(Icons.logout, color: AppColors.error),
                 label: const Text(

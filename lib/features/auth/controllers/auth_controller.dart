@@ -36,10 +36,10 @@ class AuthController extends GetxController {
     }
   }
 
-  // Gọi hàm đăng nhập
-  Future<void> login(String email, String password) async {
+  // Gọi hàm đăng nhập (email hoặc SĐT)
+  Future<void> login(String identifier, String password) async {
     isLoading.value = true;
-    String? error = await _authService.loginWithEmail(email, password);
+    String? error = await _authService.loginWithEmailOrPhone(identifier, password);
     isLoading.value = false;
 
     if (error == null) {
