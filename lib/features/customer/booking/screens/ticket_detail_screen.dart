@@ -11,11 +11,11 @@ class TicketDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate =
-        DateFormat('dd/MM/yyyy HH:mm').format(ticket.bookingDate);
-    final formattedPrice =
-        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
-            .format(ticket.totalPrice);
+    // Xóa formattedDate vì không còn dùng
+    final formattedPrice = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    ).format(ticket.totalPrice);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -30,7 +30,7 @@ class TicketDetailScreen extends StatelessWidget {
         child: Column(
           children: [
             // --- THẺ VÉ CHÍNH ---
-            _buildTicketCard(formattedDate, formattedPrice),
+            _buildTicketCard(formattedPrice),
             const SizedBox(height: 16),
             // --- QR CODE ---
             _buildQrSection(),
@@ -43,7 +43,7 @@ class TicketDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTicketCard(String formattedDate, String formattedPrice) {
+  Widget _buildTicketCard(String formattedPrice) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -87,23 +87,29 @@ class TicketDetailScreen extends StatelessWidget {
                       Text(
                         'Xe số: ${ticket.busNumber}',
                         style: const TextStyle(
-                            color: Colors.white70, fontSize: 13),
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 // Badge trạng thái
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: _getStatusColor(ticket.status),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    ticket.status == 'booked' ? '✓ Đã đặt' : ticket.status,
+                    _getStatusText(ticket.status),
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -122,9 +128,13 @@ class TicketDetailScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Điểm đi',
-                              style: TextStyle(
-                                  fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Điểm đi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             ticket.departure,
                             style: const TextStyle(
@@ -132,31 +142,42 @@ class TicketDetailScreen extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Text(ticket.departureTime,
-                              style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            ticket.departureTime,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     Column(
                       children: [
-                        const Icon(Icons.arrow_forward,
-                            color: AppColors.primary),
-                        Text(ticket.duration,
-                            style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary)),
+                        const Icon(
+                          Icons.arrow_forward,
+                          color: AppColors.primary,
+                        ),
+                        Text(
+                          ticket.duration,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Điểm đến',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary)),
+                          const Text(
+                            'Điểm đến',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             ticket.destination,
                             style: const TextStyle(
@@ -164,10 +185,13 @@ class TicketDetailScreen extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Text(ticket.arrivalTime,
-                              style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            ticket.arrivalTime,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -177,14 +201,22 @@ class TicketDetailScreen extends StatelessWidget {
                 const Divider(height: 24, color: Color(0xFFEEEEEE)),
 
                 // Thông tin chi tiết
-                _buildInfoRow(Icons.chair_outlined, 'Ghế ngồi',
-                    ticket.seats.join(', ')),
+                _buildInfoRow(
+                  Icons.chair_outlined,
+                  'Ghế ngồi',
+                  ticket.seats.join(', '),
+                ),
+                _buildInfoRow(
+                  Icons.access_time_outlined,
+                  'Giờ xuất bến',
+                  '${ticket.departureTime}${ticket.departureDate.isNotEmpty ? ' ngày ${ticket.departureDate}' : ''}',
+                ),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.calendar_today_outlined, 'Ngày mua',
-                    formattedDate),
-                const SizedBox(height: 12),
-                _buildInfoRow(Icons.confirmation_number_outlined, 'Mã vé',
-                    ticket.id.substring(0, 12).toUpperCase()),
+                _buildInfoRow(
+                  Icons.confirmation_number_outlined,
+                  'Mã vé',
+                  ticket.id.substring(0, 12).toUpperCase(),
+                ),
 
                 const Divider(height: 24, color: Color(0xFFEEEEEE)),
 
@@ -192,9 +224,13 @@ class TicketDetailScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Tổng tiền',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
+                    const Text(
+                      'Tổng tiền',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
                     Text(
                       formattedPrice,
                       style: const TextStyle(
@@ -232,8 +268,7 @@ class TicketDetailScreen extends StatelessWidget {
         children: [
           const Text(
             'Mã QR — Xuất trình khi lên xe',
-            style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -242,17 +277,68 @@ class TicketDetailScreen extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
-          QrImageView(
-            // Mã QR chứa: mã vé | tuyến | ghế
-            data:
-                'TICKET:${ticket.id}|${ticket.departure}-${ticket.destination}|SEATS:${ticket.seats.join(",")}',
-            version: QrVersions.auto,
-            size: 180,
-            backgroundColor: Colors.white,
-          ),
+          ticket.status == 'booked'
+              ? QrImageView(
+                  // Mã QR chứa: mã vé | tuyến | ghế
+                  data:
+                      'TICKET:${ticket.id}|${ticket.departure}-${ticket.destination}|SEATS:${ticket.seats.join(",")}',
+                  version: QrVersions.auto,
+                  size: 180,
+                  backgroundColor: Colors.white,
+                )
+              : Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.qr_code_scanner,
+                        size: 48,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        ticket.status == 'completed'
+                            ? 'Chuyến đi đã hoàn thành'
+                            : 'Vé đã bị huỷ',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
         ],
       ),
     );
+  }
+
+  // --- HÀM HỖ TRỢ HIỂN THỊ TRẠNG THÁI ---
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'booked':
+        return '✓ Đã đặt';
+      case 'completed':
+        return '✓ Hoàn thành';
+      case 'cancelled':
+        return '✕ Đã huỷ';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'booked':
+        return Colors.white.withValues(alpha: 0.25); // Nền mờ cho header xanh
+      case 'completed':
+        return AppColors.success;
+      case 'cancelled':
+        return AppColors.error;
+      default:
+        return Colors.white.withValues(alpha: 0.2);
+    }
   }
 
   Widget _buildSupportCard() {
@@ -266,16 +352,24 @@ class TicketDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Cần hỗ trợ?',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          const Text(
+            'Cần hỗ trợ?',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.phone_outlined, 'Hotline', '1900 6067'),
           const SizedBox(height: 8),
           _buildInfoRow(
-              Icons.access_time, 'Giờ làm việc', '6:00 - 22:00 hàng ngày'),
+            Icons.access_time,
+            'Giờ làm việc',
+            '6:00 - 17:00 hàng ngày',
+          ),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.location_on_outlined, 'Văn phòng',
-              '123 Nguyễn Văn Linh, TP.HCM'),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            'Văn phòng',
+            '12 Nguyễn Văn Bảo, TP.HCM',
+          ),
         ],
       ),
     );
@@ -290,12 +384,17 @@ class TicketDetailScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary)),
-            Text(value,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 14)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
           ],
         ),
       ],

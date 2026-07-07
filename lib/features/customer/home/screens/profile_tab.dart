@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../routes/app_pages.dart';
-
 import '../../../../services/auth_service.dart';
 
 /// Tab "Tài khoản" - thông tin và cài đặt tài khoản người dùng
@@ -13,7 +12,6 @@ class ProfileTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Get.find<AuthService>();
     final user = authService.currentUser;
-    final userName = authService.userName.value.isNotEmpty ? authService.userName.value : 'Khách hàng';
 
     return SingleChildScrollView(
       child: Column(
@@ -35,18 +33,26 @@ class ProfileTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Obx(
+                  () => Text(
+                    authService.userName.value.isNotEmpty
+                        ? authService.userName.value
+                        : 'Khách hàng',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  user?.email ?? '',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                Obx(
+                  () => Text(
+                    authService.userPhone.value.isNotEmpty
+                        ? authService.userPhone.value
+                        : (user?.email ?? ''),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                 ),
               ],
             ),
@@ -60,12 +66,12 @@ class ProfileTab extends StatelessWidget {
               _MenuItem(
                 icon: Icons.person_outline,
                 label: 'Thông tin cá nhân',
-                onTap: () {},
+                onTap: () => Get.toNamed(AppRoutes.profileEdit),
               ),
               _MenuItem(
                 icon: Icons.lock_outline,
                 label: 'Đổi mật khẩu',
-                onTap: () {},
+                onTap: () => Get.toNamed(AppRoutes.changePassword),
               ),
             ],
           ),
@@ -112,6 +118,7 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
           ),
+
         ],
       ),
     );

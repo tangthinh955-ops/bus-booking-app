@@ -15,6 +15,7 @@ class TicketService extends GetxService {
     required String userId,
     required List<String> selectedSeats,
     required double totalPrice,
+    required String departureDate,
   }) async {
     final tripRef = _firestore.collection('trips').doc(trip.id);
     final ticketRef = _firestore.collection('tickets').doc(); // Tự sinh ID cho vé
@@ -51,6 +52,7 @@ class TicketService extends GetxService {
           userId: userId,
           selectedSeats: selectedSeats,
           totalPrice: totalPrice,
+          departureDate: departureDate,
         );
 
         // Ghi dữ liệu vào database (Cập nhật chuyến xe & Lưu vé)

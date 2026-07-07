@@ -9,6 +9,7 @@ class AuthService extends GetxService {
   // Theo dõi trạng thái user hiện tại
   Rx<User?> firebaseUser = Rx<User?>(null);
   RxString userName = ''.obs;
+  RxString userPhone = ''.obs;
 
   User? get currentUser => firebaseUser.value;
 
@@ -24,6 +25,7 @@ class AuthService extends GetxService {
         _fetchUserProfile(user.uid);
       } else {
         userName.value = '';
+        userPhone.value = '';
       }
     });
   }
@@ -33,6 +35,7 @@ class AuthService extends GetxService {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
         userName.value = doc.data()?['name'] ?? '';
+        userPhone.value = doc.data()?['phone'] ?? '';
       }
     } catch (e) {
       print('Lỗi tải profile: $e');
@@ -121,6 +124,56 @@ class AuthService extends GetxService {
         default:
           return 'Lỗi đăng nhập (${e.code}).';
       }
+    } catch (e) {
+      return 'Có lỗi xảy ra: $e';
+    }
+  }
+
+  // Cập nhật Profile (Tên, SĐT)
+  Future<String?> updateUserProfile(String name, String phone) async {
+    try {
+      if (currentUser == null) return 'Lỗi: Chưa đăng nhập';
+      
+      await _firestore.collection('users').doc(currentUser!.uid).update({
+        'name': name,
+        'phone': phone,
+      });
+      
+      // Cập nhật lại state cục bộ ngay lập tức
+      userName.value = name;
+      userPhone.value = phone;
+      return null; // Thành công
+    } catch (e) {
+      return 'Có lỗi xảy ra khi cập nhật hồ sơ: $e';
+    }
+  }
+
+  // Đổi mật khẩu (yêu cầu mật khẩu hiện tại để re-authenticate)
+  Future<String?> changePassword(String currentPassword, String newPassword) async {
+    try {
+      if (currentUser == null || currentUser!.email == null) {
+        return 'Lỗi: Không tìm thấy thông tin đăng nhập.';
+      }
+      
+      // 1. Re-authenticate
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: currentUser!.email!,
+        password: currentPassword,
+      );
+      
+      await currentUser!.reauthenticateWithCredential(credential);
+      
+      // 2. Update Password
+      await currentUser!.updatePassword(newPassword);
+      
+      return null; // Thành công
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        return 'Mật khẩu hiện tại không chính xác.';
+      } else if (e.code == 'weak-password') {
+        return 'Mật khẩu mới quá yếu (cần ít nhất 6 ký tự).';
+      }
+      return 'Lỗi đổi mật khẩu: ${e.message}';
     } catch (e) {
       return 'Có lỗi xảy ra: $e';
     }

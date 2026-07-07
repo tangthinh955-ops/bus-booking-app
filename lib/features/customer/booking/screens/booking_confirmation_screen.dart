@@ -9,12 +9,14 @@ class BookingConfirmationScreen extends StatefulWidget {
   final TripModel trip;
   final List<String> selectedSeats;
   final double totalPrice;
+  final String departureDate;
 
   const BookingConfirmationScreen({
     super.key,
     required this.trip,
     required this.selectedSeats,
     required this.totalPrice,
+    required this.departureDate,
   });
 
   @override
@@ -28,12 +30,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   void _confirmBooking() async {
     setState(() => _isBooking = true);
+    final user = _authService.currentUser;
 
     final success = await _ticketService.bookTicket(
       trip: widget.trip,
-      userId: _authService.currentUser!.uid,
+      userId: user!.uid,
       selectedSeats: widget.selectedSeats,
       totalPrice: widget.totalPrice,
+      departureDate: widget.departureDate,
     );
 
     setState(() => _isBooking = false);

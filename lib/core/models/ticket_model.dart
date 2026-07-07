@@ -14,6 +14,7 @@ class TicketModel {
   final String busNumber;
   final String departure;
   final String destination;
+  final String departureDate; // e.g., '02/07/2026'
   final String departureTime;
   final String arrivalTime;
   final String duration;
@@ -29,6 +30,7 @@ class TicketModel {
     required this.busNumber,
     required this.departure,
     required this.destination,
+    required this.departureDate,
     required this.departureTime,
     required this.arrivalTime,
     required this.duration,
@@ -49,6 +51,7 @@ class TicketModel {
       busNumber: data['busNumber'] ?? '',
       departure: data['departure'] ?? '',
       destination: data['destination'] ?? '',
+      departureDate: data['departureDate'] ?? '',
       departureTime: data['departureTime'] ?? '',
       arrivalTime: data['arrivalTime'] ?? '',
       duration: data['duration'] ?? '',
@@ -67,6 +70,7 @@ class TicketModel {
       'busNumber': busNumber,
       'departure': departure,
       'destination': destination,
+      'departureDate': departureDate,
       'departureTime': departureTime,
       'arrivalTime': arrivalTime,
       'duration': duration,
@@ -80,6 +84,7 @@ class TicketModel {
     required String userId,
     required List<String> selectedSeats,
     required double totalPrice,
+    required String departureDate,
   }) {
     return TicketModel(
       id: '', // Firebase sẽ tự sinh ID
@@ -91,6 +96,7 @@ class TicketModel {
       busNumber: trip.busNumber,
       departure: trip.departure,
       destination: trip.destination,
+      departureDate: departureDate,
       departureTime: trip.departureTime,
       arrivalTime: trip.arrivalTime,
       duration: trip.duration,

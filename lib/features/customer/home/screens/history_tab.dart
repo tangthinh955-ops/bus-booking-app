@@ -77,7 +77,7 @@ class _HistoryTabState extends State<HistoryTab> {
             : (ticket.status == 'completed' ? 'Hoàn thành' : 'Đã hủy');
 
         final formattedDate = DateFormat(
-          'dd/MM/yyyy - HH:mm',
+          'dd/MM/yyyy HH:mm',
         ).format(ticket.bookingDate);
         final formattedPrice =
             '${ticket.totalPrice.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
@@ -119,27 +119,40 @@ class _HistoryTabState extends State<HistoryTab> {
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          displayStatus,
-                          style: TextStyle(
-                            color: isCompleted
-                                ? AppColors.success
-                                : AppColors.error,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isCompleted
+                                  ? AppColors.success.withValues(alpha: 0.1)
+                                  : AppColors.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              displayStatus,
+                              style: TextStyle(
+                                color: isCompleted
+                                    ? AppColors.success
+                                    : AppColors.error,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            formattedDate,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -170,7 +183,7 @@ class _HistoryTabState extends State<HistoryTab> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Giờ chạy: ${ticket.departureTime} (Mua lúc: $formattedDate)',
+                        'Giờ xuất bến: ${ticket.departureTime}${ticket.departureDate.isNotEmpty ? ' ngày ${ticket.departureDate}' : ''}',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,

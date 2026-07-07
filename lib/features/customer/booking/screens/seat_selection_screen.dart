@@ -6,8 +6,9 @@ import 'booking_confirmation_screen.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
   final TripModel trip;
+  final String departureDate;
 
-  const SeatSelectionScreen({super.key, required this.trip});
+  const SeatSelectionScreen({super.key, required this.trip, required this.departureDate});
 
   @override
   State<SeatSelectionScreen> createState() => _SeatSelectionScreenState();
@@ -171,6 +172,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                             trip: widget.trip,
                             selectedSeats: _selectedSeats,
                             totalPrice: totalPrice,
+                            departureDate: widget.departureDate,
                           ),
                         );
                       },
