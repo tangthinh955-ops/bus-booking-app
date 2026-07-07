@@ -9,8 +9,9 @@ import '../../booking/screens/seat_selection_screen.dart';
 // ════════════════════════════════════════════════════════════
 class TripCard extends StatelessWidget {
   final TripModel trip;
+  final String departureDate;
 
-  const TripCard({super.key, required this.trip});
+  const TripCard({super.key, required this.trip, required this.departureDate});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,10 @@ class TripCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: trip.hasAvailableSeats
             ? () {
-                Get.to(() => SeatSelectionScreen(trip: trip));
+                Get.to(() => SeatSelectionScreen(
+                      trip: trip,
+                      departureDate: departureDate,
+                    ));
               }
             : null,
         child: Padding(

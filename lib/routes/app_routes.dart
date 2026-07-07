@@ -5,4 +5,6 @@ abstract class AppRoutes {
   static const register = '/register';
   static const customerHome = '/customer-home';
   static const adminDashboard = '/admin-dashboard';
+  static const profileEdit = '/profile-edit';
+  static const changePassword = '/change-password';
 }

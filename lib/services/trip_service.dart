@@ -187,7 +187,8 @@ class TripService extends GetxService {
       departure: departure, destination: destination,
       departureTime: depTime, arrivalTime: arrTime,
       duration: duration, price: price,
-      totalSeats: total, availableSeats: available,
+      totalSeats: total, 
+      availableSeats: total, // Đặt mặc định trống toàn bộ chỗ
       amenities: amenities,
     );
   }
