@@ -71,3 +71,12 @@ Dự án áp dụng cấu trúc Feature-first, tách role rõ ràng. Code chính
   - Tinh chỉnh giao diện: Thu nhỏ ngày mua vé trên `HistoryTab`, thay thế ngày mua thành "Giờ xuất bến" trên `TicketDetailScreen`, và xử lý mượt mà dữ liệu vé cũ thiếu ngày.
 - **Đang làm/Vướng mắc:** Hoàn thành xong luồng người dùng (Customer). Chuẩn bị chuyển sang phát triển phần Quản trị viên (Admin Dashboard).
 - **Quyết định đã chốt:** Thông báo tự sinh (auto-generated) từ Client dựa trên danh sách vé để tiết kiệm query/lưu trữ Firestore. Dữ liệu vé cũ (không có `departureDate`) được fallback bằng logic hiển thị chuỗi rỗng để không lỗi giao diện.
+
+## [08/07/2026] — Việc: Xây dựng Admin Dashboard (Quản lý chuyến & vé)
+- **Đã làm:** 
+  - (Bước 1-4) Hoàn thành CRUD `TripService`, `AdminController` và giao diện `TripsTab`, `TripFormScreen`. Hỗ trợ thêm/sửa/xóa chuyến xe trực tiếp lên Firestore. Thêm thanh tìm kiếm client-side.
+  - (Bước 5) Xây dựng `BookingsTab` đọc dữ liệu vé thực tế từ Firestore thông qua `AdminController`. Thêm chức năng lọc trạng thái vé (`booked`, `cancelled`, `completed`) và cập nhật trạng thái vé.
+  - (Sửa lỗi crash) Chuyển `BookingsTab` từ `GetView` sang `StatefulWidget` để lưu instance của controller một lần vào `initState`, tránh lỗi lifecycle của GetX khi render widget trong một `static const List`. Sửa lỗi an toàn cho UI: đổi `Rx<String?>(null)` thành `Rxn<String>()` và fix `substring` ID để tránh `RangeError`.
+  - Cập nhật chuẩn hóa Navigation: 100% sử dụng `Get.to()`, `Get.back()` thay vì `Navigator.of(context)` để tránh lỗi context bị mất.
+- **Đang làm/Vướng mắc:** Đã khắc phục xong lỗi crash. Chuẩn bị thực hiện Bước 6: Thống kê doanh thu (`OverviewTab`) và Bước 7: Tính năng Hủy vé bên phía Customer.
+- **Quyết định đã chốt:** Đối với quy mô một nhà xe nhỏ/vừa, lấy toàn bộ danh sách Trips và Tickets về rồi dùng local filter trên Client (`AdminController.filteredTrips`, `.filteredTickets`) thay vì query phức tạp trên Firestore để tránh phải tạo Composite Indexes (trừ phi dữ liệu sau này phình to quá lớn).

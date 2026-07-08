@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/data/mock_data.dart';
 import '../../../../core/models/trip_model.dart';
+import '../controllers/admin_controller.dart';
 import 'trip_form_screen.dart';
 
-/// Tab "Chuyến xe" — Quản trị viên xem, thêm, sửa, xoá các chuyến xe.
-class TripsTab extends StatefulWidget {
+/// Tab "Chuyến xe" — Admin xem, thêm, sửa, xoá các chuyến xe.
+/// Dữ liệu lấy từ [AdminController] (Firestore thật), không dùng MockData.
+class TripsTab extends GetView<AdminController> {
   const TripsTab({super.key});
 
   @override
-  State<TripsTab> createState() => _TripsTabState();
-}
-
-class _TripsTabState extends State<TripsTab> {
-  @override
   Widget build(BuildContext context) {
-    final trips = MockData.trips;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
@@ -24,37 +19,97 @@ class _TripsTabState extends State<TripsTab> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Thêm chuyến'),
-        onPressed: () => _openForm(),
+        onPressed: () => _openForm(context),
       ),
-      body: trips.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-              itemCount: trips.length,
-              itemBuilder: (context, index) =>
-                  _AdminTripCard(
-                trip: trips[index],
-                onEdit: () => _openForm(trip: trips[index]),
-                onDelete: () => _confirmDelete(trips[index]),
+      body: Column(
+        children: [
+          // ── THANH TÌM KIẾM ───────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: TextField(
+              onChanged: (value) => controller.searchQuery.value = value,
+              decoration: InputDecoration(
+                hintText: 'Tìm theo điểm đi, điểm đến, số xe...',
+                hintStyle: const TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.textSecondary,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.adminPrimary,
+                  size: 20,
+                ),
+                suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => controller.searchQuery.value = '',
+                      )
+                    : const SizedBox.shrink()),
+                filled: true,
+                fillColor: AppColors.background,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
+          ),
+
+          // ── DANH SÁCH CHUYẾN XE ──────────────────────────────────────
+          Expanded(
+            child: Obx(() {
+              // Hiển thị spinner trong lúc đang tải dữ liệu lần đầu
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final trips = controller.filteredTrips;
+
+              if (trips.isEmpty) {
+                return _buildEmptyState(
+                  isSearching: controller.searchQuery.value.isNotEmpty,
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: controller.loadAll,
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    final trip = trips[index];
+                    return _AdminTripCard(
+                      trip: trip,
+                      onEdit: () => _openForm(context, trip: trip),
+                      onDelete: () => _confirmDelete(context, trip),
+                    );
+                  },
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _openForm({TripModel? trip}) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => TripFormScreen(trip: trip)),
-    );
-    if (result == true) setState(() {});
+  /// Mở màn hình form thêm hoặc sửa chuyến xe.
+  void _openForm(BuildContext context, {TripModel? trip}) {
+    Get.to(() => TripFormScreen(trip: trip));
   }
 
-  void _confirmDelete(TripModel trip) {
+  /// Hiển thị dialog xác nhận trước khi xóa chuyến xe.
+  void _confirmDelete(BuildContext context, TripModel trip) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Xoá chuyến xe?'),
         content: Text(
-            'Bạn có chắc muốn xoá chuyến ${trip.busNumber} (${trip.departure} → ${trip.destination})?'),
+          'Bạn có chắc muốn xoá chuyến ${trip.busNumber} '
+          '(${trip.departure} → ${trip.destination})?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -62,14 +117,9 @@ class _TripsTabState extends State<TripsTab> {
           ),
           TextButton(
             onPressed: () {
-              setState(() => MockData.trips.remove(trip));
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã xoá chuyến xe'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              // Gọi controller — tự xóa Firestore + cập nhật list local
+              controller.deleteTrip(trip.id);
             },
             child: const Text('Xoá', style: TextStyle(color: AppColors.error)),
           ),
@@ -78,16 +128,33 @@ class _TripsTabState extends State<TripsTab> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState({bool isSearching = false}) {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.directions_bus_filled,
-              size: 72, color: AppColors.textSecondary),
-          SizedBox(height: 12),
-          Text('Chưa có chuyến xe nào',
-              style: TextStyle(color: AppColors.textSecondary)),
+          Icon(
+            isSearching ? Icons.search_off : Icons.directions_bus_filled,
+            size: 72,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isSearching
+                ? 'Không tìm thấy chuyến xe phù hợp'
+                : 'Chưa có chuyến xe nào',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          if (isSearching) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'Thử tìm kiếm từ khóa khác',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -124,7 +191,9 @@ class _AdminTripCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.adminPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -132,9 +201,10 @@ class _AdminTripCard extends StatelessWidget {
                   child: Text(
                     trip.busNumber,
                     style: const TextStyle(
-                        color: AppColors.adminPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
+                      color: AppColors.adminPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -142,13 +212,17 @@ class _AdminTripCard extends StatelessWidget {
                   child: Text(
                     trip.busType,
                     style: const TextStyle(
-                        fontSize: 13, color: AppColors.textSecondary),
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert,
-                      color: AppColors.textSecondary),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.textSecondary,
+                  ),
                   onSelected: (val) {
                     if (val == 'edit') onEdit();
                     if (val == 'delete') onDelete();
@@ -180,24 +254,31 @@ class _AdminTripCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // ── Hàng 2: Tuyến đường + giờ ──
+            // ── Hàng 2: Tuyến đường + giờ + giá ──
             Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${trip.departureTime}  ${trip.departure}',
-                          style: const TextStyle(fontSize: 13)),
+                      Text(
+                        '${trip.departureTime}  ${trip.departure}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
                       const SizedBox(height: 2),
-                      Row(
-                        children: const [
-                          Icon(Icons.arrow_downward,
-                              size: 12, color: AppColors.textSecondary),
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_downward,
+                            size: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ],
                       ),
-                      Text('${trip.arrivalTime}  ${trip.destination}',
-                          style: const TextStyle(fontSize: 13)),
+                      Text(
+                        '${trip.arrivalTime}  ${trip.destination}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ],
                   ),
                 ),
@@ -215,19 +296,24 @@ class _AdminTripCard extends StatelessWidget {
             const Divider(height: 1),
             const SizedBox(height: 10),
 
-            // ── Hàng 3: Ghế trống / tổng ghế ──
+            // ── Hàng 3: Ghế trống / tổng ghế + thanh tiến trình ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.event_seat,
-                        size: 15, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.event_seat,
+                      size: 15,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${trip.availableSeats}/${trip.totalSeats} ghế trống',
                       style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -261,8 +347,8 @@ class _AdminTripCard extends StatelessWidget {
 
   String _formatPrice(double price) {
     return price.toInt().toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]}.',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
   }
 }

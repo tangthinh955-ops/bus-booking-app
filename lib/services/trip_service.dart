@@ -8,6 +8,8 @@ class TripService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ── ĐỌC DỮ LIỆU ─────────────────────────────────────────────────────
+  //
+  // Tập hợp các hàm chỉ đọc (query) dữ liệu từ Firestore, không thay đổi DB.
 
   /// Lấy tất cả chuyến xe (dành cho Admin xem toàn bộ)
   Future<List<TripModel>> getAllTrips() async {
@@ -60,6 +62,71 @@ class TripService extends GetxService {
     final doc = await _firestore.collection('trips').doc(tripId).get();
     if (!doc.exists || doc.data() == null) return null;
     return TripModel.fromFirestore(doc.data()!, doc.id);
+  }
+
+  // ── GHI DỮ LIỆU (CRUD) ──────────────────────────────────────────────
+  //
+  // Tập hợp các hàm thêm / sửa / xóa chuyến xe trên Firestore.
+  // Admin Dashboard gọi các hàm này thông qua AdminController.
+
+  /// Thêm một chuyến xe mới lên Firestore.
+  ///
+  /// Firestore sẽ tự sinh document ID; hàm trả về ID đó để dùng lại nếu cần.
+  /// Ném [Exception] nếu ghi thất bại (ví dụ: mất mạng).
+  Future<String> addTrip(TripModel trip) async {
+    try {
+      final docRef = await _firestore
+          .collection('trips')
+          .add(trip.toFirestore());
+      return docRef.id; // Trả về ID vừa được Firestore tạo
+    } catch (e) {
+      throw Exception('Không thể thêm chuyến xe: $e');
+    }
+  }
+
+  /// Thêm chuyến xe với ID do Admin tự đặt (VD: 'tp001', 'dl001').
+  ///
+  /// Dùng [.set()] thay vì [.add()] để chỉ định document ID cụ thể.
+  /// Nếu ID đã tồn tại, Firestore sẽ **ghi đè** document cũ.
+  Future<void> addTripWithId(TripModel trip) async {
+    try {
+      await _firestore
+          .collection('trips')
+          .doc(trip.id)
+          .set(trip.toFirestore());
+    } catch (e) {
+      throw Exception('Không thể thêm chuyến xe: $e');
+    }
+  }
+
+  /// Cập nhật thông tin một chuyến xe đã tồn tại trên Firestore.
+  ///
+  /// Dùng [trip.id] để xác định document cần sửa.
+  /// Chỉ ghi đè các trường có trong [toFirestore()] — không xóa trường khác.
+  Future<void> updateTrip(TripModel trip) async {
+    try {
+      await _firestore
+          .collection('trips')
+          .doc(trip.id)
+          .update(trip.toFirestore());
+    } catch (e) {
+      throw Exception('Không thể cập nhật chuyến xe: $e');
+    }
+  }
+
+  /// Xóa vĩnh viễn một chuyến xe khỏi Firestore theo [tripId].
+  ///
+  /// Lưu ý: Hành động này không hoàn tác được.
+  /// Nên kiểm tra xem chuyến có vé đang hoạt động không trước khi gọi hàm này.
+  Future<void> deleteTrip(String tripId) async {
+    try {
+      await _firestore
+          .collection('trips')
+          .doc(tripId)
+          .delete();
+    } catch (e) {
+      throw Exception('Không thể xóa chuyến xe: $e');
+    }
   }
 
   // ── SEED DỮ LIỆU MẪU ────────────────────────────────────────────────

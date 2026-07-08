@@ -4,6 +4,7 @@ import '../features/customer/home/screens/customer_home_screen.dart';
 import '../features/customer/home/screens/profile_edit_screen.dart';
 import '../features/customer/home/screens/change_password_screen.dart';
 import '../features/admin/dashboard/screens/admin_dashboard_screen.dart';
+import '../features/admin/dashboard/controllers/admin_controller.dart';
 
 part 'app_routes.dart';
 
@@ -19,6 +20,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.adminDashboard,
       page: () => const AdminDashboardScreen(),
+      // Binding: GetX sẽ tự khởi tạo AdminController khi vào trang Admin
+      // và tự dispose khi rời khỏi — không cần quản lý thủ công.
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AdminController>(() => AdminController());
+      }),
     ),
     GetPage(
       name: AppRoutes.profileEdit,
