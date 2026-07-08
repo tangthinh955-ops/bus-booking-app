@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/data/mock_data.dart';
-import '../../../../core/models/booking_model.dart';
+import '../../../../core/models/ticket_model.dart';
+import '../controllers/admin_controller.dart';
 
-/// Tab "Đơn đặt vé" — Quản trị viên xem và xử lý các đơn đặt vé của khách.
-/// Có thể xác nhận (pending → confirmed) hoặc huỷ đơn (→ cancelled).
+/// Tab "Đơn đặt vé" — Admin xem và cập nhật trạng thái vé từ Firestore.
+/// Dùng StatefulWidget để lưu tham chiếu controller 1 lần — tránh lỗi
+/// lifecycle khi widget nằm trong static const List (AdminDashboardScreen).
 class BookingsTab extends StatefulWidget {
   const BookingsTab({super.key});
 
@@ -13,104 +15,140 @@ class BookingsTab extends StatefulWidget {
 }
 
 class _BookingsTabState extends State<BookingsTab> {
-  BookingStatus? _filter; // null = tất cả
+  // Lấy controller 1 lần khi widget được mount
+  late final AdminController _ctrl;
+
+  // Nhãn cho từng trạng thái vé
+  static const _statusLabels = <String?, String>{
+    null: 'Tất cả',
+    'booked': 'Đang chờ',
+    'cancelled': 'Đã huỷ',
+    'completed': 'Hoàn thành',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = Get.find<AdminController>();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bookings = MockData.bookings
-        .where((b) => _filter == null || b.status == _filter)
-        .toList()
-        .reversed
-        .toList();
-
     return Column(
       children: [
+        // ── FILTER CHIPS ────────────────────────────────────────────────
         _buildFilterBar(),
+
+        // ── DANH SÁCH VÉ ────────────────────────────────────────────────
         Expanded(
-          child: bookings.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) => _BookingCard(
-                    booking: bookings[index],
-                    onChanged: () => setState(() {}),
-                  ),
-                ),
+          child: Obx(() {
+            if (_ctrl.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final tickets = _ctrl.filteredTickets;
+
+            if (tickets.isEmpty) {
+              return _buildEmptyState();
+            }
+
+            return RefreshIndicator(
+              onRefresh: _ctrl.loadAll,
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                itemCount: tickets.length,
+                itemBuilder: (_, index) =>
+                    _TicketCard(ticket: tickets[index], ctrl: _ctrl),
+              ),
+            );
+          }),
         ),
       ],
     );
   }
 
+  // ── FILTER BAR ──────────────────────────────────────────────────────────
+
   Widget _buildFilterBar() {
-    final filters = <BookingStatus?>[
-      null,
-      BookingStatus.pending,
-      BookingStatus.confirmed,
-      BookingStatus.completed,
-      BookingStatus.cancelled,
-    ];
+    final filters = _statusLabels.keys.toList(); // [null, 'booked', ...]
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       color: Colors.white,
       child: SizedBox(
         height: 36,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: filters.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final f = filters[index];
-            final selected = _filter == f;
-            return ChoiceChip(
-              label: Text(f == null ? 'Tất cả' : f.label),
-              selected: selected,
-              onSelected: (_) => setState(() => _filter = f),
-              selectedColor: AppColors.adminPrimary,
-              labelStyle: TextStyle(
-                color: selected ? Colors.white : AppColors.textPrimary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-              ),
-              backgroundColor: AppColors.background,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: selected ? AppColors.adminPrimary : Colors.grey.shade300,
+        child: Obx(() {
+          final current = _ctrl.ticketStatusFilter.value;
+          return ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: filters.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, index) {
+              final f = filters[index];
+              final selected = current == f;
+              return ChoiceChip(
+                label: Text(_statusLabels[f] ?? 'Tất cả'),
+                selected: selected,
+                onSelected: (_) => _ctrl.ticketStatusFilter.value = f,
+                selectedColor: AppColors.adminPrimary,
+                labelStyle: TextStyle(
+                  color: selected ? Colors.white : AppColors.textPrimary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-            );
-          },
-        ),
+                backgroundColor: AppColors.background,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: selected
+                        ? AppColors.adminPrimary
+                        : Colors.grey.shade300,
+                  ),
+                ),
+              );
+            },
+          );
+        }),
       ),
     );
   }
 
+  // ── EMPTY STATE ─────────────────────────────────────────────────────────
+
   Widget _buildEmptyState() {
-    return const Center(
+    final isFiltering = _ctrl.ticketStatusFilter.value != null;
+    final filterLabel =
+        _statusLabels[_ctrl.ticketStatusFilter.value] ?? 'Tất cả';
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 72, color: AppColors.textSecondary),
-          SizedBox(height: 12),
-          Text('Không có đơn đặt vé nào',
-              style: TextStyle(color: AppColors.textSecondary)),
+          const Icon(
+            Icons.receipt_long_outlined,
+            size: 72,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isFiltering
+                ? 'Không có đơn vé "$filterLabel"'
+                : 'Chưa có đơn đặt vé nào',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// Thẻ đơn đặt vé — có nút Xác nhận / Huỷ tuỳ theo trạng thái
-// ════════════════════════════════════════════════════════════
-class _BookingCard extends StatelessWidget {
-  final BookingModel booking;
-  final VoidCallback onChanged;
+// ════════════════════════════════════════════════════════════════════════════
+// Thẻ vé xe — nhận controller qua constructor để tránh Get.find trong build()
+// ════════════════════════════════════════════════════════════════════════════
+class _TicketCard extends StatelessWidget {
+  final TicketModel ticket;
+  final AdminController ctrl;
 
-  const _BookingCard({required this.booking, required this.onChanged});
+  const _TicketCard({required this.ticket, required this.ctrl});
 
   @override
   Widget build(BuildContext context) {
@@ -123,70 +161,124 @@ class _BookingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Hàng 1: Mã vé + Badge trạng thái ──────────────────────
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    '#${booking.id}',
+                    '#${_shortId(ticket.id)}',
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 13),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-                _statusBadge(booking.status),
+                _statusBadge(ticket.status),
               ],
             ),
             const SizedBox(height: 10),
             const Divider(height: 1),
             const SizedBox(height: 10),
+
+            // ── Hàng 2: Tuyến đường ─────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.person_outline,
-                    size: 16, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(booking.customerName,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13.5)),
-                const SizedBox(width: 10),
-                const Icon(Icons.phone_outlined,
-                    size: 15, color: AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Text(booking.phone,
-                    style: const TextStyle(
-                        fontSize: 12.5, color: AppColors.textSecondary)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.directions_bus_outlined,
-                    size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.directions_bus_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(booking.route,
-                      style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    '${ticket.departure} → ${ticket.destination}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
+
+            // ── Hàng 3: Số xe + giờ ─────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.schedule,
-                    size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.badge_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
-                Text(booking.departureTime,
+                Text(
+                  ticket.busNumber,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${ticket.departureTime} — ${ticket.departureDate}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            // ── Hàng 4: User ID rút gọn ─────────────────────────────────
+            Row(
+              children: [
+                const Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'UID: ${_shortId(ticket.userId)}',
                     style: const TextStyle(
-                        fontSize: 12.5, color: AppColors.textSecondary)),
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
+
+            // ── Hàng 5: Ghế + giá + nút hành động ──────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${booking.seatCount} ghế · ${_formatPrice(booking.totalPrice)}đ',
-                    style: const TextStyle(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${ticket.seats.length} ghế: ${ticket.seats.join(', ')}',
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
+                    Text(
+                      '${_formatPrice(ticket.totalPrice)}đ',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.adminPrimary,
-                        fontSize: 13.5)),
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
                 _buildActions(context),
               ],
             ),
@@ -196,23 +288,33 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
+  // ── Rút gọn ID an toàn (tránh RangeError nếu ID ngắn) ───────────────────
+
+  String _shortId(String id) {
+    if (id.length <= 12) return id;
+    return '${id.substring(0, 12)}...';
+  }
+
+  // ── Nút hành động ────────────────────────────────────────────────────────
+
   Widget _buildActions(BuildContext context) {
-    if (booking.status == BookingStatus.pending) {
+    if (ticket.status == 'booked') {
       return Row(
         children: [
           TextButton(
-            onPressed: () => _updateStatus(context, BookingStatus.cancelled),
+            onPressed: () => _confirmCancel(),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Huỷ'),
+            child: const Text('Huỷ vé'),
           ),
           ElevatedButton(
-            onPressed: () => _updateStatus(context, BookingStatus.confirmed),
+            onPressed: () => ctrl.updateTicketStatus(ticket.id, 'completed'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.adminPrimary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14),
+              minimumSize: const Size(0, 34),
             ),
-            child: const Text('Xác nhận'),
+            child: const Text('Hoàn thành', style: TextStyle(fontSize: 12.5)),
           ),
         ],
       );
@@ -220,34 +322,43 @@ class _BookingCard extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  void _updateStatus(BuildContext context, BookingStatus status) {
-    booking.status = status;
-    onChanged();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(status == BookingStatus.confirmed
-            ? 'Đã xác nhận đơn ${booking.id}'
-            : 'Đã huỷ đơn ${booking.id}'),
-        behavior: SnackBarBehavior.floating,
-      ),
+  void _confirmCancel() {
+    Get.defaultDialog(
+      title: 'Huỷ vé?',
+      middleText:
+          'Huỷ vé #${_shortId(ticket.id)} sẽ hoàn trả ghế cho chuyến xe.',
+      textConfirm: 'Xác nhận huỷ',
+      textCancel: 'Bỏ qua',
+      confirmTextColor: Colors.white,
+      buttonColor: AppColors.error,
+      onConfirm: () {
+        Get.back();
+        ctrl.updateTicketStatus(ticket.id, 'cancelled');
+      },
     );
   }
 
-  Widget _statusBadge(BookingStatus status) {
-    Color color;
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  Widget _statusBadge(String status) {
+    final Color color;
+    final String label;
     switch (status) {
-      case BookingStatus.pending:
+      case 'booked':
         color = Colors.orange;
+        label = 'Đang chờ';
         break;
-      case BookingStatus.confirmed:
-        color = AppColors.success;
-        break;
-      case BookingStatus.cancelled:
+      case 'cancelled':
         color = AppColors.error;
+        label = 'Đã huỷ';
         break;
-      case BookingStatus.completed:
+      case 'completed':
+        color = AppColors.success;
+        label = 'Hoàn thành';
+        break;
+      default:
         color = AppColors.textSecondary;
-        break;
+        label = status;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -256,16 +367,20 @@ class _BookingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status.label,
-        style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w600),
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
 
   String _formatPrice(double price) {
     return price.toInt().toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]}.',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
   }
 }

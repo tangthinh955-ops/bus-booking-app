@@ -71,7 +71,7 @@ class TicketService extends GetxService {
     }
   }
 
-  /// Lấy danh sách lịch sử vé của một người dùng
+  /// Lấy danh sách lịch sử vé của một người dùng (dành cho Customer)
   Future<List<TicketModel>> getUserTickets(String userId) async {
     try {
       final snapshot = await _firestore
@@ -82,14 +82,50 @@ class TicketService extends GetxService {
       final tickets = snapshot.docs
           .map((doc) => TicketModel.fromFirestore(doc.data(), doc.id))
           .toList();
-          
+
       // Sắp xếp trên Dart để tránh lỗi thiếu Composite Index của Firestore
       tickets.sort((a, b) => b.bookingDate.compareTo(a.bookingDate));
-      
+
       return tickets;
     } catch (e) {
       print('Lỗi tải lịch sử vé: $e');
       return [];
+    }
+  }
+
+  /// Lấy TOÀN BỘ vé trên hệ thống (dành cho Admin xem và quản lý)
+  ///
+  /// Không lọc theo userId — Admin có quyền thấy tất cả đơn của mọi khách.
+  Future<List<TicketModel>> getAllTickets() async {
+    try {
+      final snapshot = await _firestore.collection('tickets').get();
+
+      final tickets = snapshot.docs
+          .map((doc) => TicketModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      // Sắp xếp mới nhất lên đầu
+      tickets.sort((a, b) => b.bookingDate.compareTo(a.bookingDate));
+
+      return tickets;
+    } catch (e) {
+      print('Lỗi tải toàn bộ vé: $e');
+      return [];
+    }
+  }
+
+  /// Cập nhật trạng thái của một vé (Admin dùng để xác nhận hoặc huỷ)
+  ///
+  /// [ticketId]: document ID của vé cần cập nhật.
+  /// [newStatus]: trạng thái mới, ví dụ 'booked', 'cancelled', 'completed'.
+  Future<void> updateTicketStatus(String ticketId, String newStatus) async {
+    try {
+      await _firestore
+          .collection('tickets')
+          .doc(ticketId)
+          .update({'status': newStatus});
+    } catch (e) {
+      throw Exception('Không thể cập nhật trạng thái vé: $e');
     }
   }
 }
