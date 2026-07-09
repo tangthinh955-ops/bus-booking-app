@@ -1,17 +1,24 @@
-# app_bus
+🚌 Book Intercity Bus Tickets
 
-A new Flutter project.
+Flutter app for booking intercity bus tickets in Vietnam — separate Customer and Admin experiences in one codebase. 🚧 Work in progress (coursework project, 05/2026 – present).
 
-## Getting Started
+Tech Stack
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+Framework: Flutter / Dart
+State Management: GetX
+Backend: Firebase Auth, Cloud Firestore
+Routing: go_router (role-based: Customer / Admin)
+Architecture: Feature-first folder structure
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Features (in progress)
+
+Trip browsing & real-time seat availability
+Firebase Auth (login/signup)
+QR Code e-ticket generation
+Admin dashboard: trip CRUD, real-time bookings, notifications
+Contributors
+
+[Tăng Vạn Thịnh] — architecture, state management, Firebase integration, customer & booking flow
+[Dương Tiến Phát] — admin UI, feature testing

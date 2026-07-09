@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/ticket_model.dart';
+import 'package:get/get.dart';
+import '../../../../services/ticket_service.dart';
 
 /// Màn hình Chi tiết vé — hiển thị đầy đủ thông tin 1 vé xe khách
 class TicketDetailScreen extends StatelessWidget {
@@ -37,8 +39,132 @@ class TicketDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             // --- HỖ TRỢ ---
             _buildSupportCard(),
+
+            // --- NÚT HỦY VÉ ---
+            if (ticket.status == 'booked' || ticket.status == 'pending') ...[
+              const SizedBox(height: 24),
+              _buildCancelButton(context),
+              const SizedBox(height: 24),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCancelButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.error,
+          side: const BorderSide(color: AppColors.error),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: () => _confirmCancelTicket(context),
+        child: const Text(
+          'Hủy vé',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      ),
+    );
+  }
+
+  void _confirmCancelTicket(BuildContext context) {
+    // Kiểm tra điều kiện hủy (trước 2 tiếng)
+    try {
+      if (ticket.departureDate.isNotEmpty && ticket.departureTime.isNotEmpty) {
+        final dateParts = ticket.departureDate.split('/');
+        final timeParts = ticket.departureTime.split(':');
+        if (dateParts.length == 3 && timeParts.length >= 2) {
+          final depTime = DateTime(
+            int.parse(dateParts[2]),
+            int.parse(dateParts[1]),
+            int.parse(dateParts[0]),
+            int.parse(timeParts[0]),
+            int.parse(timeParts[1]),
+          );
+          
+          if (depTime.difference(DateTime.now()).inHours < 2) {
+            Get.snackbar(
+              'Không thể huỷ vé',
+              'Bạn chỉ có thể huỷ vé trước giờ khởi hành ít nhất 2 tiếng.',
+              backgroundColor: Colors.orange.withValues(alpha: 0.9),
+              colorText: Colors.white,
+            );
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      print('Lỗi parse ngày giờ: $e');
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận hủy vé'),
+        content: const Text(
+          'Bạn có chắc chắn muốn hủy vé này không? Hành động này không thể hoàn tác và số ghế sẽ được nhả ra cho người khác.',
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Không', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.of(ctx).pop(); // Đóng dialog
+
+              // Hiện loading...
+              Get.dialog(
+                const Center(child: CircularProgressIndicator()),
+                barrierDismissible: false,
+              );
+
+              final ticketService = Get.find<TicketService>();
+              final error = await ticketService.cancelTicket(
+                ticketId: ticket.id,
+                tripId: ticket.tripId,
+                seatsToCancel: ticket.seats,
+              );
+
+              Get.back(); // Đóng loading
+
+              if (error == null) {
+                Get.back(); // Lùi trang về Lịch sử trước tiên
+                Get.snackbar(
+                  'Thành công',
+                  'Đã hủy vé thành công.',
+                  backgroundColor: Colors.green.withValues(alpha: 0.9),
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 3),
+                );
+              } else {
+                Get.snackbar(
+                  'Lỗi',
+                  error,
+                  backgroundColor: Colors.red.withValues(alpha: 0.9),
+                  colorText: Colors.white,
+                );
+              }
+            },
+            child: const Text(
+              'Có, Hủy vé',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

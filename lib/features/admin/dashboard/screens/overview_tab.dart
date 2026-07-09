@@ -1,89 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/data/mock_data.dart';
-import '../../../../core/models/booking_model.dart';
+import '../../../../core/models/ticket_model.dart';
+import '../controllers/admin_controller.dart';
+import 'package:intl/intl.dart';
 
 /// Tab "Tổng quan" — Trang chủ của khu vực Quản trị viên.
 /// Hiển thị các chỉ số nhanh (số chuyến, doanh thu, vé đã bán, đơn chờ xử lý)
 /// và danh sách các đơn đặt vé gần đây nhất.
-class OverviewTab extends StatelessWidget {
+class OverviewTab extends StatefulWidget {
   const OverviewTab({super.key});
 
   @override
+  State<OverviewTab> createState() => _OverviewTabState();
+}
+
+class _OverviewTabState extends State<OverviewTab> {
+  late final AdminController _adminCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _adminCtrl = Get.find<AdminController>();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final pendingCount = MockData.bookings
-        .where((b) => b.status == BookingStatus.pending)
-        .length;
-    final recentBookings = MockData.bookings.reversed.take(4).toList();
+    return Obx(() {
+      final recentBookings = _adminCtrl.filteredTickets.take(4).toList();
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
 
-          // ── LƯỚI THỐNG KÊ NHANH ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                _StatCard(
-                  icon: Icons.directions_bus,
-                  label: 'Tổng chuyến xe',
-                  value: '${MockData.trips.length}',
-                  color: AppColors.adminPrimary,
-                ),
-                _StatCard(
-                  icon: Icons.event_seat,
-                  label: 'Vé đã bán',
-                  value: '${MockData.totalSeatsSold}',
-                  color: AppColors.success,
-                ),
-                _StatCard(
-                  icon: Icons.pending_actions,
-                  label: 'Đơn chờ xử lý',
-                  value: '$pendingCount',
-                  color: Colors.orange,
-                ),
-                _StatCard(
-                  icon: Icons.payments,
-                  label: 'Doanh thu',
-                  value: _formatPrice(MockData.totalRevenue),
-                  color: AppColors.adminPrimaryDark,
-                  isSmallValue: true,
-                ),
-              ],
+            // ── LƯỚI THỐNG KÊ NHANH ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.5,
+                children: [
+                  _StatCard(
+                    icon: Icons.directions_bus,
+                    label: 'Tổng chuyến xe',
+                    value: '${_adminCtrl.totalTrips}',
+                    color: AppColors.adminPrimary,
+                  ),
+                  _StatCard(
+                    icon: Icons.event_seat,
+                    label: 'Vé (ghế) đã bán',
+                    value: '${_adminCtrl.totalSeatsSold}',
+                    color: AppColors.success,
+                  ),
+                  _StatCard(
+                    icon: Icons.pending_actions,
+                    label: 'Đơn chờ xử lý',
+                    value: '${_adminCtrl.pendingCount}',
+                    color: Colors.orange,
+                  ),
+                  _StatCard(
+                    icon: Icons.payments,
+                    label: 'Doanh thu',
+                    value: _formatPrice(_adminCtrl.totalRevenue),
+                    color: AppColors.adminPrimaryDark,
+                    isSmallValue: true,
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // ── TIÊU ĐỀ DANH SÁCH ──
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              'Đơn đặt vé gần đây',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            // ── TIÊU ĐỀ DANH SÁCH ──
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text(
+                'Đơn đặt vé gần đây',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
 
-          // ── DANH SÁCH ĐƠN GẦN ĐÂY ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: recentBookings
-                  .map((b) => _RecentBookingTile(booking: b))
-                  .toList(),
-            ),
-          ),
-        ],
-      ),
-    );
+            // ── DANH SÁCH ĐƠN GẦN ĐÂY ──
+            if (recentBookings.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(
+                  child: Text(
+                    'Chưa có đơn vé nào.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: recentBookings
+                      .map((t) => _RecentBookingTile(ticket: t))
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildHeader() {
@@ -203,9 +228,14 @@ class _StatCard extends StatelessWidget {
 // Dòng đơn đặt vé gần đây
 // ════════════════════════════════════════════════════════════
 class _RecentBookingTile extends StatelessWidget {
-  final BookingModel booking;
+  final TicketModel ticket;
 
-  const _RecentBookingTile({required this.booking});
+  const _RecentBookingTile({required this.ticket});
+
+  String _shortId(String id) {
+    if (id.length <= 6) return id;
+    return id.substring(id.length - 6).toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -234,37 +264,41 @@ class _RecentBookingTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(booking.customerName,
+                Text('Khách UID: ${_shortId(ticket.userId)}',
                     style:
                         const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 2),
-                Text(booking.route,
+                Text('${ticket.departure} → ${ticket.destination}',
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
-          _statusBadge(booking.status),
+          _statusBadge(ticket.status),
         ],
       ),
     );
   }
 
-  Widget _statusBadge(BookingStatus status) {
+  Widget _statusBadge(String status) {
     Color color;
+    String label;
     switch (status) {
-      case BookingStatus.pending:
+      case 'booked':
         color = Colors.orange;
+        label = 'Đang chờ';
         break;
-      case BookingStatus.confirmed:
-        color = AppColors.success;
-        break;
-      case BookingStatus.cancelled:
+      case 'cancelled':
         color = AppColors.error;
+        label = 'Đã huỷ';
         break;
-      case BookingStatus.completed:
-        color = AppColors.textSecondary;
+      case 'completed':
+        color = AppColors.success;
+        label = 'Hoàn thành';
         break;
+      default:
+        color = AppColors.primary;
+        label = status;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -273,7 +307,7 @@ class _RecentBookingTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status.label,
+        label,
         style: TextStyle(
             color: color, fontSize: 10.5, fontWeight: FontWeight.w600),
       ),

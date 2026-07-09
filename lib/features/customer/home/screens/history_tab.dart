@@ -89,7 +89,10 @@ class _HistoryTabState extends State<HistoryTab> {
           ),
           clipBehavior: Clip.antiAlias, // Để InkWell ripple không tràn ra ngoài
           child: InkWell(
-            onTap: () => Get.to(() => TicketDetailScreen(ticket: ticket)),
+            onTap: () async {
+              await Get.to(() => TicketDetailScreen(ticket: ticket));
+              _loadTickets(); // Refresh lại danh sách
+            },
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
