@@ -18,7 +18,9 @@ class TicketService extends GetxService {
     required String departureDate,
   }) async {
     final tripRef = _firestore.collection('trips').doc(trip.id);
-    final ticketRef = _firestore.collection('tickets').doc(); // Tự sinh ID cho vé
+    // Tạo ID dễ đọc cho vé: TK- + timestamp (ví dụ: TK-1783609131839)
+    final customTicketId = 'TK-${DateTime.now().millisecondsSinceEpoch}';
+    final ticketRef = _firestore.collection('tickets').doc(customTicketId);
 
     try {
       await _firestore.runTransaction((transaction) async {
@@ -68,6 +70,67 @@ class TicketService extends GetxService {
     } catch (e) {
       Get.snackbar('Lỗi đặt vé', e.toString());
       return false; // Giao dịch thất bại
+    }
+  }
+
+  /// Khách hàng hủy vé
+  /// 1. Cập nhật trạng thái vé thành 'cancelled'
+  /// 2. Hoàn lại số ghế và xóa mã ghế khỏi danh sách đã đặt của chuyến xe
+  Future<String?> cancelTicket({
+    required String ticketId,
+    required String tripId,
+    required List<String> seatsToCancel,
+  }) async {
+    final tripRef = _firestore.collection('trips').doc(tripId);
+    final ticketRef = _firestore.collection('tickets').doc(ticketId);
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        // Lấy thông tin chuyến xe
+        final tripDoc = await transaction.get(tripRef);
+        if (!tripDoc.exists) {
+          throw Exception('Chuyến xe không tồn tại.');
+        }
+
+        // Lấy thông tin vé
+        final ticketDoc = await transaction.get(ticketRef);
+        if (!ticketDoc.exists) {
+          throw Exception('Vé không tồn tại.');
+        }
+
+        final currentStatus = ticketDoc.data()?['status'] ?? 'booked';
+        if (currentStatus == 'cancelled') {
+          throw Exception('Vé này đã được hủy trước đó.');
+        }
+
+        final currentTrip =
+            TripModel.fromFirestore(tripDoc.data()!, tripDoc.id);
+
+        // Tính toán lại ghế
+        final newAvailableSeats =
+            currentTrip.availableSeats + seatsToCancel.length;
+        
+        // Cập nhật lại mảng ghế (xóa các ghế đã hủy)
+        final updatedBookedSeats =
+            List<String>.from(currentTrip.bookedSeatsList);
+        updatedBookedSeats
+            .removeWhere((seat) => seatsToCancel.contains(seat));
+
+        // Thực thi cập nhật
+        transaction.update(tripRef, {
+          'availableSeats': newAvailableSeats,
+          'bookedSeatsList': updatedBookedSeats,
+        });
+
+        transaction.update(ticketRef, {
+          'status': 'cancelled',
+        });
+      });
+
+      return null; // Thành công
+    } catch (e) {
+      print('Lỗi hủy vé: $e');
+      return e.toString().replaceAll('Exception: ', ''); // Trả về thông báo lỗi
     }
   }
 

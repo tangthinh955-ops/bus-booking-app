@@ -41,13 +41,17 @@ class AdminController extends GetxController {
   /// Tổng số chuyến xe đang có
   int get totalTrips => trips.length;
 
-  /// Tổng số vé đã bán (tính bằng số đơn, không tính số ghế)
-  int get totalTicketsSold => tickets.length;
+  /// Tổng số ghế đã bán (từ các vé chưa bị hủy)
+  int get totalSeatsSold => tickets
+      .where((t) => t.status != 'cancelled')
+      .fold(0, (sum, t) => sum + t.seats.length);
 
-  /// Tổng doanh thu từ tất cả vé đã bán (kể cả vé bị huỷ — để Admin tự lọc)
-  double get totalRevenue => tickets.fold(0.0, (sum, t) => sum + t.totalPrice);
+  /// Tổng doanh thu (chỉ tính vé thành công hoặc đã đi)
+  double get totalRevenue => tickets
+      .where((t) => t.status == 'booked' || t.status == 'completed')
+      .fold(0.0, (sum, t) => sum + t.totalPrice);
 
-  /// Số vé đang chờ xác nhận (status == 'booked')
+  /// Số vé chờ xử lý (status == 'booked')
   int get pendingCount => tickets.where((t) => t.status == 'booked').length;
 
   /// Bộ lọc trạng thái vé cho BookingsTab.
