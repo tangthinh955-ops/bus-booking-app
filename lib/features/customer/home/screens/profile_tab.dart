@@ -75,22 +75,6 @@ class ProfileTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          _buildMenuSection(
-            title: 'Hỗ trợ',
-            items: [
-              _MenuItem(
-                icon: Icons.help_outline,
-                label: 'Trợ giúp & Hỏi đáp',
-                onTap: () {},
-              ),
-              _MenuItem(
-                icon: Icons.phone_outlined,
-                label: 'Liên hệ: 1900 6067',
-                onTap: () {},
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
 
           // --- NÚT ĐĂNG XUẤT ---

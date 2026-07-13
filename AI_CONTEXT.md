@@ -80,3 +80,11 @@ Dự án áp dụng cấu trúc Feature-first, tách role rõ ràng. Code chính
   - Cập nhật chuẩn hóa Navigation: 100% sử dụng `Get.to()`, `Get.back()` thay vì `Navigator.of(context)` để tránh lỗi context bị mất.
 - **Đang làm/Vướng mắc:** Đã khắc phục xong lỗi crash. Chuẩn bị thực hiện Bước 6: Thống kê doanh thu (`OverviewTab`) và Bước 7: Tính năng Hủy vé bên phía Customer.
 - **Quyết định đã chốt:** Đối với quy mô một nhà xe nhỏ/vừa, lấy toàn bộ danh sách Trips và Tickets về rồi dùng local filter trên Client (`AdminController.filteredTrips`, `.filteredTickets`) thay vì query phức tạp trên Firestore để tránh phải tạo Composite Indexes (trừ phi dữ liệu sau này phình to quá lớn).
+
+## [09/07/2026] — Việc: Hoàn thiện Admin Dashboard & Tính năng Hủy vé
+- **Đã làm:** 
+  - Sửa `OverviewTab` (Admin Dashboard) để hiển thị thống kê thực (doanh thu, số lượng vé, số vé đang chờ) trực tiếp từ Firebase thay vì dữ liệu giả. Đồng bộ chuẩn màu sắc (Cam - Đang chờ, Xanh lá - Hoàn thành, Đỏ - Đã hủy).
+  - Thêm tính năng **Hủy vé (Customer)**: Dùng Firestore Transaction (`ticket_service.dart`) để đảm bảo vừa đổi trạng thái vé sang 'cancelled', vừa cộng lại số lượng ghế trống (`availableSeats`) cho chuyến xe một cách an toàn.
+  - Bổ sung **điều kiện 2 tiếng**: Khách hàng chỉ được phép hủy vé trước giờ khởi hành ít nhất 2 tiếng (`ticket_detail_screen.dart`). Xử lý triệt để lỗi điều hướng và làm mới lại danh sách `HistoryTab` ngay sau khi hủy.
+  - Cải tiến định dạng ID vé trên Firestore: Bỏ ID random tự động của Firebase, chuyển sang dạng **`TK-<thời gian mili-giây>`** (ví dụ `TK-1783609131839`) để dễ quản lý và tự động sắp xếp theo thời gian trên cơ sở dữ liệu.
+- **Quyết định đã chốt:** Giữ định dạng custom ID `TK-timestamp` vì quy mô app cho phép ID sinh ra từ phía client dựa trên thời gian thực (ít khả năng đụng độ) và cực kì thân thiện cho việc vận hành/tìm lỗi thủ công.

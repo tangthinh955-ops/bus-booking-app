@@ -12,15 +12,15 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
-  
+
   bool _isLoading = false;
 
   @override
@@ -64,10 +64,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isAdmin = Get.arguments?['isAdmin'] ?? false;
+    final Color primaryColor = isAdmin
+        ? AppColors.adminPrimary
+        : AppColors.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Đổi mật khẩu'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -91,7 +96,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 32),
-              
+
               // Mật khẩu hiện tại
               TextFormField(
                 controller: _currentPasswordController,
@@ -100,8 +105,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   labelText: 'Mật khẩu hiện tại',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                    icon: Icon(
+                      _obscureCurrent ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureCurrent = !_obscureCurrent),
                   ),
                   border: const OutlineInputBorder(),
                 ),
@@ -113,7 +121,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              
+
               // Mật khẩu mới
               TextFormField(
                 controller: _newPasswordController,
@@ -122,7 +130,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   labelText: 'Mật khẩu mới',
                   prefixIcon: const Icon(Icons.lock_reset),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                      _obscureNew ? Icons.visibility_off : Icons.visibility,
+                    ),
                     onPressed: () => setState(() => _obscureNew = !_obscureNew),
                   ),
                   border: const OutlineInputBorder(),
@@ -138,7 +148,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              
+
               // Xác nhận mật khẩu mới
               TextFormField(
                 controller: _confirmPasswordController,
@@ -147,8 +157,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   labelText: 'Xác nhận mật khẩu mới',
                   prefixIcon: const Icon(Icons.check_circle_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    icon: Icon(
+                      _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
                   border: const OutlineInputBorder(),
                 ),
@@ -163,7 +176,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 },
               ),
               const SizedBox(height: 40),
-              
+
               // Nút Lưu thay đổi
               SizedBox(
                 width: double.infinity,
@@ -171,7 +184,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitChangePassword,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -188,7 +201,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         )
                       : const Text(
                           'Cập nhật mật khẩu',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ),
