@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/trip_model.dart';
+import '../../../../services/ticket_service.dart';
 import 'booking_confirmation_screen.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
   final TripModel trip;
   final String departureDate;
 
-  const SeatSelectionScreen({super.key, required this.trip, required this.departureDate});
+  const SeatSelectionScreen({
+    super.key,
+    required this.trip,
+    required this.departureDate,
+  });
 
   @override
   State<SeatSelectionScreen> createState() => _SeatSelectionScreenState();
@@ -16,6 +21,27 @@ class SeatSelectionScreen extends StatefulWidget {
 
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   final List<String> _selectedSeats = [];
+  List<String> _bookedSeats = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookedSeats();
+  }
+
+  Future<void> _fetchBookedSeats() async {
+    final seats = await Get.find<TicketService>().getBookedSeats(
+      widget.trip.id,
+      widget.departureDate,
+    );
+    if (mounted) {
+      setState(() {
+        _bookedSeats = seats;
+        _isLoading = false;
+      });
+    }
+  }
 
   // Tạo danh sách mã ghế ảo dựa trên tổng số ghế
   List<String> _generateSeatList() {
@@ -34,7 +60,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   }
 
   void _toggleSeat(String seatId) {
-    if (widget.trip.bookedSeatsList.contains(seatId)) return; // Ghế đã đặt
+    if (_bookedSeats.contains(seatId)) return; // Ghế đã đặt
 
     setState(() {
       if (_selectedSeats.contains(seatId)) {
@@ -60,74 +86,81 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          // Ghi chú màu sắc
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : Column(
               children: [
-                _buildLegendItem(Colors.white, 'Trống', border: true),
-                _buildLegendItem(Colors.grey.shade400, 'Đã đặt'),
-                _buildLegendItem(AppColors.primary, 'Đang chọn'),
+                // Ghi chú màu sắc
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildLegendItem(Colors.white, 'Trống', border: true),
+                      _buildLegendItem(Colors.grey.shade400, 'Đã đặt'),
+                      _buildLegendItem(AppColors.primary, 'Đang chọn'),
+                    ],
+                  ),
+                ),
+
+                const Divider(height: 1),
+
+                // Sơ đồ ghế
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(24),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, // 3 ghế 1 hàng
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemCount: widget.trip.totalSeats,
+                    itemBuilder: (context, index) {
+                      final seatId = seats[index];
+                      final isBooked = _bookedSeats.contains(seatId);
+                      final isSelected = _selectedSeats.contains(seatId);
+
+                      return GestureDetector(
+                        onTap: () => _toggleSeat(seatId),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isBooked
+                                ? Colors.grey.shade300
+                                : (isSelected
+                                      ? AppColors.primary
+                                      : Colors.white),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isBooked
+                                  ? Colors.grey.shade400
+                                  : (isSelected
+                                        ? AppColors.primary
+                                        : Colors.grey.shade300),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            seatId,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isBooked
+                                  ? Colors.grey.shade600
+                                  : (isSelected
+                                        ? Colors.white
+                                        : AppColors.textPrimary),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-          ),
-
-          const Divider(height: 1),
-
-          // Sơ đồ ghế
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // 3 ghế 1 hàng
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: widget.trip.totalSeats,
-              itemBuilder: (context, index) {
-                final seatId = seats[index];
-                final isBooked = widget.trip.bookedSeatsList.contains(seatId);
-                final isSelected = _selectedSeats.contains(seatId);
-
-                return GestureDetector(
-                  onTap: () => _toggleSeat(seatId),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isBooked
-                          ? Colors.grey.shade300
-                          : (isSelected ? AppColors.primary : Colors.white),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isBooked
-                            ? Colors.grey.shade400
-                            : (isSelected
-                                  ? AppColors.primary
-                                  : Colors.grey.shade300),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      seatId,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isBooked
-                            ? Colors.grey.shade600
-                            : (isSelected
-                                  ? Colors.white
-                                  : AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

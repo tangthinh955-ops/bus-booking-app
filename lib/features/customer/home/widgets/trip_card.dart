@@ -2,16 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/trip_model.dart';
+import '../../../../services/ticket_service.dart';
 import '../../booking/screens/seat_selection_screen.dart';
 
 // ════════════════════════════════════════════════════════════
 // Widget thẻ chuyến xe — Phong cách hãng xe riêng
 // ════════════════════════════════════════════════════════════
-class TripCard extends StatelessWidget {
+class TripCard extends StatefulWidget {
   final TripModel trip;
   final String departureDate;
 
   const TripCard({super.key, required this.trip, required this.departureDate});
+
+  @override
+  State<TripCard> createState() => _TripCardState();
+}
+
+class _TripCardState extends State<TripCard> {
+  int _availableSeats = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSeats();
+  }
+
+  Future<void> _fetchSeats() async {
+    final bookedSeats = await Get.find<TicketService>().getBookedSeats(
+      widget.trip.id,
+      widget.departureDate,
+    );
+    if (mounted) {
+      setState(() {
+        _availableSeats = widget.trip.totalSeats - bookedSeats.length;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +49,11 @@ class TripCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: trip.hasAvailableSeats
+        onTap: (_availableSeats > 0 && !_isLoading)
             ? () {
                 Get.to(() => SeatSelectionScreen(
-                      trip: trip,
-                      departureDate: departureDate,
+                      trip: widget.trip,
+                      departureDate: widget.departureDate,
                     ));
               }
             : null,
@@ -41,14 +69,14 @@ class TripCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        trip.departureTime,
+                        widget.trip.departureTime,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        trip.departure,
+                        widget.trip.departure,
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -62,7 +90,7 @@ class TripCard extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          trip.duration,
+                          widget.trip.duration,
                           style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textSecondary,
@@ -89,14 +117,14 @@ class TripCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        trip.arrivalTime,
+                        widget.trip.arrivalTime,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        trip.destination,
+                        widget.trip.destination,
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -129,7 +157,7 @@ class TripCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              trip.busType,
+                              widget.trip.busType,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.primary,
@@ -142,7 +170,7 @@ class TripCard extends StatelessWidget {
                         // Tiện ích
                         Wrap(
                           spacing: 4,
-                          children: trip.amenities.take(3).map((a) {
+                          children: widget.trip.amenities.take(3).map((a) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -171,7 +199,7 @@ class TripCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${_formatPrice(trip.price)}đ',
+                        '${_formatPrice(widget.trip.price)}đ',
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -192,12 +220,19 @@ class TripCard extends StatelessWidget {
   }
 
   Widget _buildSeatBadge() {
-    if (!trip.hasAvailableSeats) {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    if (_availableSeats <= 0) {
       return _badge('Hết chỗ', AppColors.error);
-    } else if (trip.isAlmostFull) {
-      return _badge('Còn ${trip.availableSeats} chỗ', Colors.orange);
+    } else if (_availableSeats <= 5) {
+      return _badge('Còn $_availableSeats chỗ', Colors.orange);
     } else {
-      return _badge('Còn ${trip.availableSeats} chỗ', AppColors.success);
+      return _badge('Còn $_availableSeats chỗ', AppColors.success);
     }
   }
 

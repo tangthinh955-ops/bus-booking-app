@@ -309,7 +309,7 @@ class _AdminTripCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${trip.availableSeats}/${trip.totalSeats} ghế trống',
+                      'Tổng: ${trip.totalSeats} ghế',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
