@@ -88,3 +88,14 @@ Dự án áp dụng cấu trúc Feature-first, tách role rõ ràng. Code chính
   - Bổ sung **điều kiện 2 tiếng**: Khách hàng chỉ được phép hủy vé trước giờ khởi hành ít nhất 2 tiếng (`ticket_detail_screen.dart`). Xử lý triệt để lỗi điều hướng và làm mới lại danh sách `HistoryTab` ngay sau khi hủy.
   - Cải tiến định dạng ID vé trên Firestore: Bỏ ID random tự động của Firebase, chuyển sang dạng **`TK-<thời gian mili-giây>`** (ví dụ `TK-1783609131839`) để dễ quản lý và tự động sắp xếp theo thời gian trên cơ sở dữ liệu.
 - **Quyết định đã chốt:** Giữ định dạng custom ID `TK-timestamp` vì quy mô app cho phép ID sinh ra từ phía client dựa trên thời gian thực (ít khả năng đụng độ) và cực kì thân thiện cho việc vận hành/tìm lỗi thủ công.
+
+## [14/07/2026] — Việc: Xử lý logic đặt vé theo ngày & Nâng cấp Sơ đồ ghế
+- **Đã làm:**
+  - Cải tiến logic đặt vé: Chuyển đổi từ cơ chế lưu số ghế cứng trong `TripModel` sang lưu trữ theo ngày thông qua collection `tickets` (Dùng `TicketService.getBookedSeats(tripId, date)`). Khắc phục triệt để lỗi "vé bị dính sang ngày khác".
+  - Nâng cấp `SeatSelectionScreen`: 
+    - Phân chia 2 tầng cho xe Giường nằm 34 chỗ (hiển thị UI Tầng dưới B / Tầng trên A sử dụng custom Tabs).
+    - Cập nhật định dạng ghế cho xe thường 34 chỗ (chung 1 sơ đồ nhưng nửa đầu A, nửa đuôi B).
+    - Xe Limousine 9 chỗ giữ nguyên sơ đồ 1 tầng với 100% prefix A.
+  - Chỉnh sửa dữ liệu gốc (Seed Data): Cập nhật toàn bộ các tuyến "Giường nằm 40 chỗ" thành "Giường nằm 34 chỗ" để sát với thực tế. Tạo/xóa tool khôi phục dữ liệu trên Firebase để đồng bộ hóa seed data.
+- **Đang làm/Vướng mắc:** Tạm thời đã giải quyết xong các nhu cầu cấp bách.
+- **Quyết định đã chốt:** Logic phân tầng và mã hóa ghế ngồi (Prefix A, B) được code cứng ở Client (theo tính chất đặc thù của 3 loại xe) để tối ưu UI và giảm tải logic cấu hình trên Firestore.
