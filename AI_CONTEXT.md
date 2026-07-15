@@ -99,3 +99,11 @@ Dự án áp dụng cấu trúc Feature-first, tách role rõ ràng. Code chính
   - Chỉnh sửa dữ liệu gốc (Seed Data): Cập nhật toàn bộ các tuyến "Giường nằm 40 chỗ" thành "Giường nằm 34 chỗ" để sát với thực tế. Tạo/xóa tool khôi phục dữ liệu trên Firebase để đồng bộ hóa seed data.
 - **Đang làm/Vướng mắc:** Tạm thời đã giải quyết xong các nhu cầu cấp bách.
 - **Quyết định đã chốt:** Logic phân tầng và mã hóa ghế ngồi (Prefix A, B) được code cứng ở Client (theo tính chất đặc thù của 3 loại xe) để tối ưu UI và giảm tải logic cấu hình trên Firestore.
+
+## [15/07/2026] — Việc: Tính năng Thông báo hệ thống cho Admin
+- **Đã làm:** 
+  - Tạo `AdminNotificationsScreen` và liên kết với nút "Thông báo hệ thống" trong `AccountTab` (Admin).
+  - Tự động sinh danh sách thông báo lịch sử đặt vé (Đặt mới, Hủy vé, Hoàn thành) trực tiếp từ `AdminController.tickets` mà không cần truy vấn thêm.
+  - Tối ưu hiển thị định danh khách: Sử dụng Short ID (5 ký tự đầu của `userId`) thay vì `customerName` do `TicketModel` không lưu tên. Tránh việc phải sửa data model hoặc join bảng Users phức tạp.
+- **Đang làm/Vướng mắc:** Các chức năng của Admin cơ bản đã rất ổn định.
+- **Quyết định đã chốt:** Tái sử dụng list vé đã fetch sẵn trên máy client của Admin để sinh thông báo động (giống cách làm ở phía Customer). Dùng Short ID thay cho Full Name để UI chạy cực nhanh, tiết kiệm thao tác đọc database.

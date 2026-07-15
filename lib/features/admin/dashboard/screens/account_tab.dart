@@ -5,6 +5,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../services/auth_service.dart';
 
+import 'admin_notifications_screen.dart';
+
 /// Tab "Tài khoản" — Thông tin quản trị viên và nút đăng xuất.
 class AccountTab extends StatelessWidget {
   const AccountTab({super.key});
@@ -17,7 +19,11 @@ class AccountTab extends StatelessWidget {
         children: [
           _buildHeader(),
           const SizedBox(height: 12),
-          _menuItem(Icons.notifications_outlined, 'Thông báo hệ thống'),
+          _menuItem(
+            Icons.notifications_outlined, 
+            'Thông báo hệ thống',
+            onTap: () => Get.to(() => const AdminNotificationsScreen()),
+          ),
           _menuItem(
             Icons.lock_outline,
             'Đổi mật khẩu',
